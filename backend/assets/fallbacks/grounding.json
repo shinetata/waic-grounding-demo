@@ -17,20 +17,40 @@
     "groundings": [
       {
         "bbox": [
-          0.596,
+          0.592,
           0.048,
           0.984,
           0.528
         ],
-        "label": "Service Health 表格，包含所有服务的CPU、Pods等信息",
+        "label": "Service Health 表格，包含所有28个服务的监控数据",
+        "query_index": 0
+      },
+      {
+        "bbox": [
+          0.608,
+          0.108,
+          0.636,
+          0.132
+        ],
+        "label": "auth-service 的 CPU 值：41",
+        "query_index": 0
+      },
+      {
+        "bbox": [
+          0.672,
+          0.108,
+          0.695,
+          0.132
+        ],
+        "label": "auth-service 的 Pods 数量：45",
         "query_index": 0
       }
     ],
     "answer": "CPU使用率最高的服务是 auth-service，其CPU使用率为41，当前副本数为45。",
-    "elapsed": 3.75,
+    "elapsed": 5.81,
     "usage": {
       "prompt_tokens": 585,
-      "completion_tokens": 233
+      "completion_tokens": 319
     }
   },
   {
@@ -48,51 +68,41 @@
     "type": "step",
     "step": 2,
     "query_index": 1,
-    "thought": "我需要在图中找到过去24小时的P99延迟图表，该图表位于左下角的'P99 LATENCY — 24H DETAIL (MULTI-SERVICES)'区域。从图表中可以看到一个明显的峰值，其数值标注为'852ms'，并标注了时间'2025-05-15 14:15'。此外，该峰值对应的警报信息在'ACTIVE ALERTS'区域中显示为'service latency P99 (852ms) > 300ms SLA (health)'，表明延迟超过了SLA阈值。同时，'RESOURCE SATURATION'区域显示'CPU'使用率为'92%'，'Memory'使用率为'71%'，'DB Connections'为'847/1000'，接近饱和。因此，峰值为852ms，发生在2025-05-15 14:15，受影响的资源是CPU、内存和数据库连接。",
+    "thought": "首先，我需要定位到显示过去24小时P99延迟的图表。在截图中，'P99 LATENCY — 24H (DETAIL: MULTI-SERVICES)' 图表位于左下角，显示了延迟随时间的变化。从图表中可以看到一个明显的峰值，其数值标注为 '900ms'，发生在大约 '10:00' 的时间点。接下来，我需要查找哪些资源因此接近饱和。在 'ACTIVE ALERTS' 区域，有多个警报提示资源接近饱和，包括 'service-gateway CPU: 80% + 80% threshold for 3min'、'service-gateway P99 latency: 800ms + 300ms SLA breach'、'kafka consumer lag: 10K msgs + partition 7 stuck'、'db memory consumption: 80% + 80% threshold' 和 'db inference memory: 85% + approaching OOM'。这些警报表明CPU、P99延迟、Kafka消费者延迟、数据库内存和推理内存都接近或已达到饱和状态。",
     "groundings": [
       {
         "bbox": [
-          0.012,
+          0.014,
           0.477,
-          0.585,
-          0.602
+          0.576,
+          0.604
         ],
-        "label": "P99延迟图表，显示峰值为852ms，发生在14:15",
+        "label": "P99延迟图表，显示峰值为900ms，发生在约10:00",
         "query_index": 1
       },
       {
         "bbox": [
-          0.012,
-          0.325,
-          0.585,
-          0.45
+          0.014,
+          0.327,
+          0.576,
+          0.464
         ],
-        "label": "ACTIVE ALERTS区域，显示延迟警报",
-        "query_index": 1
-      },
-      {
-        "bbox": [
-          0.772,
-          0.698,
-          0.985,
-          0.835
-        ],
-        "label": "RESOURCE SATURATION区域，显示CPU、内存和数据库连接使用率",
+        "label": "ACTIVE ALERTS区域，列出多个资源接近饱和的警报",
         "query_index": 1
       }
     ],
-    "answer": "过去24小时P99延迟的峰值为852毫秒，发生在2025-05-15 14:15。受影响的资源包括CPU（92%）、内存（71%）和数据库连接（847/1000，接近饱和）。",
-    "elapsed": 6.82,
+    "answer": "过去24小时P99延迟的峰值为900毫秒，发生在约10:00。因此接近饱和的资源包括：service-gateway CPU、service-gateway P99延迟、Kafka消费者延迟、数据库内存和推理内存。",
+    "elapsed": 6.59,
     "usage": {
       "prompt_tokens": 591,
-      "completion_tokens": 456
+      "completion_tokens": 422
     }
   },
   {
     "type": "query_end",
     "query_index": 1,
     "query": "过去24小时P99延迟出现了异常峰值，峰值具体是多少毫秒？发生在什么时间？同时指出哪些资源因此接近饱和。",
-    "answer": "过去24小时P99延迟的峰值为852毫秒，发生在2025-05-15 14:15。受影响的资源包括CPU（92%）、内存（71%）和数据库连接（847/1000，接近饱和）。"
+    "answer": "过去24小时P99延迟的峰值为900毫秒，发生在约10:00。因此接近饱和的资源包括：service-gateway CPU、service-gateway P99延迟、Kafka消费者延迟、数据库内存和推理内存。"
   },
   {
     "type": "query_start",
@@ -103,86 +113,96 @@
     "type": "step",
     "step": 3,
     "query_index": 2,
-    "thought": "用户要求根据事件关联时间线，找出v2.4.0部署后的级联故障链条，并定位从部署到回滚的全部事件。我需要在图中找到'DEPLOYMENT TIMELINE - INCIDENT CORRELATION'区域，该区域明确列出了部署事件和后续的关联事件。从图中可以看到，v2.4.0部署发生在16:30，随后在16:32出现服务降级，接着是数据库连接池耗尽、Kafka分区背压、CPU飙升、内存泄漏等事件，最终在16:35触发回滚。这些事件按时间顺序排列，构成了完整的故障链条。",
+    "thought": "用户要求根据事件关联时间线，找出v2.4.0部署后的级联故障链条，并定位从部署到回滚的全部事件。我需要在图中找到'DEPLOYMENT TIMELINE - INCIDENT CORRELATION'区域，该区域明确列出了部署事件和相关故障事件的时间线。从图中可以看到，v2.4.0部署发生在16:25，随后在16:27出现服务降级，16:28出现数据库连接池耗尽，16:29出现Kafka分区延迟，16:30出现服务降级和数据库连接池耗尽，最终在16:35执行回滚操作。这些事件按时间顺序排列，构成了完整的级联故障链条。",
     "groundings": [
       {
         "bbox": [
-          0.01,
-          0.614,
-          0.587,
-          0.85
+          0.012,
+          0.631,
+          0.595,
+          0.845
         ],
-        "label": "部署时间线和关联事件区域，包含v2.4.0部署、服务降级、数据库连接池耗尽、Kafka分区背压、CPU飙升、内存泄漏和回滚事件",
+        "label": "部署时间线和关联事件表，包含v2.4.0部署、故障事件和回滚操作",
         "query_index": 2
       }
     ],
-    "answer": "v2.4.0部署后的级联故障链条为：16:30部署v2.4.0 → 16:32服务降级 → 16:33数据库连接池耗尽 → 16:34 Kafka分区背压 → 16:34 CPU飙升 → 16:34 内存泄漏 → 16:35回滚。",
-    "elapsed": 3.96,
+    "answer": "v2.4.0部署后的级联故障链条为：16:25部署v2.4.0 → 16:27服务降级 → 16:28数据库连接池耗尽 → 16:29 Kafka分区延迟 → 16:30服务降级和数据库连接池耗尽 → 16:35回滚至v2.3.0。",
+    "elapsed": 5.01,
     "usage": {
       "prompt_tokens": 599,
-      "completion_tokens": 328
+      "completion_tokens": 332
     }
   },
   {
     "type": "query_end",
     "query_index": 2,
     "query": "根据事件关联时间线，v2.4.0部署后的级联故障链条是什么？请定位部署时间线和关联表中从部署到回滚的全部事件。",
-    "answer": "v2.4.0部署后的级联故障链条为：16:30部署v2.4.0 → 16:32服务降级 → 16:33数据库连接池耗尽 → 16:34 Kafka分区背压 → 16:34 CPU飙升 → 16:34 内存泄漏 → 16:35回滚。"
+    "answer": "v2.4.0部署后的级联故障链条为：16:25部署v2.4.0 → 16:27服务降级 → 16:28数据库连接池耗尽 → 16:29 Kafka分区延迟 → 16:30服务降级和数据库连接池耗尽 → 16:35回滚至v2.3.0。"
   },
   {
     "type": "scene_end",
     "scene": "grounding",
     "total_steps": 3,
-    "total_groundings": 5,
+    "total_groundings": 6,
     "groundings": [
       {
         "bbox": [
-          0.596,
+          0.592,
           0.048,
           0.984,
           0.528
         ],
-        "label": "Service Health 表格，包含所有服务的CPU、Pods等信息",
+        "label": "Service Health 表格，包含所有28个服务的监控数据",
         "query_index": 0
       },
       {
         "bbox": [
-          0.012,
+          0.608,
+          0.108,
+          0.636,
+          0.132
+        ],
+        "label": "auth-service 的 CPU 值：41",
+        "query_index": 0
+      },
+      {
+        "bbox": [
+          0.672,
+          0.108,
+          0.695,
+          0.132
+        ],
+        "label": "auth-service 的 Pods 数量：45",
+        "query_index": 0
+      },
+      {
+        "bbox": [
+          0.014,
           0.477,
-          0.585,
-          0.602
+          0.576,
+          0.604
         ],
-        "label": "P99延迟图表，显示峰值为852ms，发生在14:15",
+        "label": "P99延迟图表，显示峰值为900ms，发生在约10:00",
+        "query_index": 1
+      },
+      {
+        "bbox": [
+          0.014,
+          0.327,
+          0.576,
+          0.464
+        ],
+        "label": "ACTIVE ALERTS区域，列出多个资源接近饱和的警报",
         "query_index": 1
       },
       {
         "bbox": [
           0.012,
-          0.325,
-          0.585,
-          0.45
+          0.631,
+          0.595,
+          0.845
         ],
-        "label": "ACTIVE ALERTS区域，显示延迟警报",
-        "query_index": 1
-      },
-      {
-        "bbox": [
-          0.772,
-          0.698,
-          0.985,
-          0.835
-        ],
-        "label": "RESOURCE SATURATION区域，显示CPU、内存和数据库连接使用率",
-        "query_index": 1
-      },
-      {
-        "bbox": [
-          0.01,
-          0.614,
-          0.587,
-          0.85
-        ],
-        "label": "部署时间线和关联事件区域，包含v2.4.0部署、服务降级、数据库连接池耗尽、Kafka分区背压、CPU飙升、内存泄漏和回滚事件",
+        "label": "部署时间线和关联事件表，包含v2.4.0部署、故障事件和回滚操作",
         "query_index": 2
       }
     ]

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import GroundingScene from './scenes/GroundingScene.vue'
 import NavigationScene from './scenes/NavigationScene.vue'
 
@@ -20,23 +20,16 @@ function clearSwitchTimer() {
 function switchScene(scene: Scene) {
   clearSwitchTimer()
   currentScene.value = scene
-  switchTimer = setTimeout(() => {
-    switchTimer = null
-    if (playState.value === 'stopped') return
-    if (scene === 'grounding') groundingRef.value?.start()
-    else navigationRef.value?.start()
-  }, 300)
 }
 
 function handleDone() {
-  if (playState.value !== 'playing') return
-  const next: Scene = currentScene.value === 'grounding' ? 'navigation' : 'grounding'
-  switchScene(next)
+  playState.value = 'stopped'
 }
 
 function play() {
   playState.value = 'playing'
-  switchScene('grounding')
+  if (currentScene.value === 'grounding') groundingRef.value?.start()
+  else navigationRef.value?.start()
 }
 
 function pause() {
@@ -60,10 +53,6 @@ function restart() {
   if (currentScene.value === 'grounding') groundingRef.value?.start()
   else navigationRef.value?.start()
 }
-
-onMounted(() => {
-  play()
-})
 </script>
 
 <template>

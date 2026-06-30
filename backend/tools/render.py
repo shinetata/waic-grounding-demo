@@ -82,6 +82,9 @@ def render_page(page, name: str, spec: dict) -> dict:
     body = page.evaluate("() => ({ w: document.body.scrollWidth, h: document.body.scrollHeight })")
     full_w, full_h = body["w"], body["h"]
 
+    page.set_viewport_size({"width": full_w, "height": full_h})
+    page.wait_for_timeout(200)
+
     png_path = PAGES_DIR / f"{name}.png"
     page.screenshot(path=str(png_path), full_page=True)
 

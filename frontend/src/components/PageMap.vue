@@ -147,15 +147,16 @@ const connectionLines = computed(() => {
   background: #111318;
   border-radius: 12px;
   border: 1px solid #1e222a;
-  padding: 12px;
+  padding: 10px;
+  flex-shrink: 0;
 }
 .map-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding-bottom: 10px;
+  gap: 6px;
+  padding-bottom: 8px;
   border-bottom: 1px solid #1e222a;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 .map-icon { font-size: 14px; }
 .map-title { font-size: 13px; font-weight: 600; color: #e0e0e0; }
@@ -173,7 +174,7 @@ const connectionLines = computed(() => {
   position: relative;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  gap: 6px;
 }
 .grid-connections {
   position: absolute;

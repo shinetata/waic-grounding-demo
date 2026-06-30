@@ -27,18 +27,18 @@ defineProps<{
 <style scoped>
 .scene-progress {
   display: flex;
-  align-items: center;
-  padding: 8px 16px;
+  flex-direction: column;
+  padding: 10px;
   background: #0d0f14;
   border-radius: 10px;
   border: 1px solid #1e222a;
-  gap: 0;
+  gap: 4px;
   flex-shrink: 0;
 }
 .progress-node {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   position: relative;
 }
 .node-dot {
@@ -76,15 +76,7 @@ defineProps<{
 .progress-node.active .node-label { color: #e0e0e0; font-weight: 600; }
 .progress-node.done .node-label { color: #3fb950; }
 .node-connector {
-  width: 24px;
-  height: 2px;
-  background: #2a2e38;
-  margin: 0 4px;
-  border-radius: 1px;
-  transition: background 0.4s ease;
-}
-.node-connector.filled {
-  background: linear-gradient(90deg, #3fb950, #58a6ff);
+  display: none;
 }
 @keyframes pulse-ring {
   0% { transform: scale(1); opacity: 0.8; }

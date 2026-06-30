@@ -178,6 +178,7 @@ defineExpose({ start, stop })
   <div class="navigation-scene">
     <div class="nav-left">
       <PageMap :pages="pages" :navigation-path="navPath" />
+      <SceneProgress :steps="navProgressSteps" />
     </div>
     <div class="nav-main">
       <ScreenshotView
@@ -186,13 +187,16 @@ defineExpose({ start, stop })
         :current-rect="currentRect"
         :show-viewport="currentRect.w < 0.95"
       />
+      <div class="page-label">
+        <span class="page-label-icon">📄</span>
+        {{ PAGE_TITLES[currentStage] || currentStage }}
+      </div>
     </div>
     <div class="nav-right">
       <div class="task-card">
         <div class="task-label">审计任务</div>
         <div class="task-text">评估 NexaCloud 管理后台的安全风险</div>
       </div>
-      <SceneProgress :steps="navProgressSteps" />
       <ThoughtStream :entries="thoughts" title="审计过程" />
       <EvidencePanel :entries="evidenceEntries" />
       <SummaryCard
@@ -210,34 +214,52 @@ defineExpose({ start, stop })
 <style scoped>
 .navigation-scene {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   height: 100%;
-  padding: 16px;
+  padding: 12px;
 }
 .nav-left {
   width: 220px;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-self: flex-start;
 }
 .nav-main {
   flex: 1;
   min-width: 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
 }
+.page-label {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #111318;
+  border: 1px solid #1e222a;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #c0c5d0;
+}
+.page-label-icon { font-size: 14px; }
 .nav-right {
   width: 340px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   overflow: hidden;
 }
 .task-card {
   background: #111318;
   border: 1px solid #1e222a;
   border-radius: 10px;
-  padding: 14px;
+  padding: 10px 14px;
   flex-shrink: 0;
 }
 .task-label {
@@ -245,11 +267,11 @@ defineExpose({ start, stop })
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: #8b949e;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 .task-text {
-  font-size: 14px;
+  font-size: 13px;
   color: #e0e0e0;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 </style>

@@ -71,7 +71,8 @@ watch(() => props.entries.length, async () => {
 .thought-stream {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   background: #111318;
   border-radius: 12px;
   border: 1px solid #1e222a;
@@ -155,9 +156,9 @@ watch(() => props.entries.length, async () => {
 }
 .stream-empty {
   text-align: center;
-  padding: 40px;
+  padding: 20px 16px;
   color: #484f58;
-  font-size: 13px;
+  font-size: 12px;
 }
 @keyframes slide-in {
   from { opacity: 0; transform: translateY(8px); }

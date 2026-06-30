@@ -183,8 +183,12 @@ const overlayStyle = computed(() => ({
 .screenshot-view {
   position: relative;
   width: 100%;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
+  background: #0d0f14;
+  border-radius: 10px;
+  border: 1px solid #1e222a;
 }
 .screenshot-img {
   display: block;
