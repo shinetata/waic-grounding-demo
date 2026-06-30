@@ -28,10 +28,8 @@ uv sync --extra render --quiet
 ok "Backend deps ready"
 
 # ---------- 2. Playwright browser ----------
-if ! uv run python -c "from playwright.sync_api import sync_playwright" 2>/dev/null; then
-  info "Installing Playwright Chromium..."
-  uv run playwright install chromium
-fi
+info "Ensuring Playwright Chromium is installed..."
+uv run playwright install chromium --quiet 2>/dev/null || uv run playwright install chromium
 ok "Playwright ready"
 
 # ---------- 3. Render HTML → PNG ----------
