@@ -2,189 +2,317 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1120">
+<meta name="viewport" content="width=1440">
 <title>CloudOps Monitor</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Inter', -apple-system, sans-serif; background: #0f1117; color: #e0e0e0; width: 1120px; }
-  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; background: #161a22; border-bottom: 1px solid #2a2e38; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: #0f1117; color: #e0e0e0; width: 1440px; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 6px 14px; background: #161a22; border-bottom: 1px solid #2a2e38; }
   .topbar .logo { font-size: 13px; font-weight: 700; color: #58a6ff; }
-  .topbar .time { font-size: 11px; color: #8b949e; }
-  .topbar .alerts { background: #da3633; color: #fff; border-radius: 10px; padding: 1px 7px; font-size: 10px; font-weight: 600; }
+  .topbar .cluster-tabs { display: flex; gap: 2px; }
+  .topbar .cluster-tab { padding: 3px 10px; border-radius: 4px; font-size: 10px; color: #8b949e; background: transparent; border: 1px solid #2a2e38; }
+  .topbar .cluster-tab.active { background: #1e2d3d; color: #58a6ff; border-color: #58a6ff; }
+  .topbar .right { display: flex; align-items: center; gap: 10px; }
+  .topbar .time { font-size: 10px; color: #8b949e; }
+  .topbar .alerts { background: #da3633; color: #fff; border-radius: 10px; padding: 1px 7px; font-size: 9px; font-weight: 600; }
+  .topbar .env-badge { background: #238636; color: #fff; border-radius: 3px; padding: 1px 6px; font-size: 9px; font-weight: 600; }
 
-  .main-grid { display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: auto auto auto; gap: 8px; padding: 8px 12px; }
+  .main-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; padding: 6px 10px; }
 
-  .panel { background: #161a22; border: 1px solid #2a2e38; border-radius: 6px; padding: 8px 10px; }
-  .panel-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: #8b949e; margin-bottom: 4px; }
-  .panel-value { font-size: 18px; font-weight: 700; line-height: 1.2; }
-  .panel-sub { font-size: 9px; color: #8b949e; margin-top: 2px; }
-  .chart-area { height: 45px; margin: 4px 0 2px; }
-  .footnote { font-size: 8px; color: #484f58; margin-top: 2px; }
-  .threshold-label { font-size: 8px; fill: #da3633; }
+  .panel { background: #161a22; border: 1px solid #2a2e38; border-radius: 5px; padding: 6px 8px; overflow: hidden; }
+  .panel-title { font-size: 8px; text-transform: uppercase; letter-spacing: 0.5px; color: #8b949e; margin-bottom: 3px; display: flex; align-items: center; justify-content: space-between; }
+  .panel-title .region { font-size: 7px; color: #484f58; text-transform: none; letter-spacing: 0; }
+  .panel-value { font-size: 15px; font-weight: 700; line-height: 1.2; }
+  .panel-sub { font-size: 8px; color: #8b949e; margin-top: 1px; }
+  .chart-area { height: 38px; margin: 2px 0; }
+  .footnote { font-size: 7px; color: #484f58; margin-top: 1px; }
+  .threshold-label { font-size: 7px; fill: #da3633; }
+  .delta-up { color: #3fb950; font-size: 8px; }
+  .delta-down { color: #f85149; font-size: 8px; }
 
-  /* Row 1: 6 metric cards */
-  .p-cpu { grid-column: 1; }
-  .p-mem { grid-column: 2; }
-  .p-net { grid-column: 3; }
-  .p-err { grid-column: 4; }
-  .p-lat { grid-column: 5; }
-  .p-dep { grid-column: 6; }
+  .p-span2 { grid-column: span 2; }
+  .p-span3 { grid-column: span 3; }
+  .p-span4 { grid-column: span 4; }
+  .p-span5 { grid-column: span 5; }
+  .p-span8 { grid-column: span 8; }
 
-  /* Row 2: wide latency chart + deployment timeline */
-  .p-lat-wide { grid-column: 1 / 4; }
-  .p-dep-wide { grid-column: 4 / 7; }
-
-  /* Row 3: service table full width */
-  .p-table { grid-column: 1 / 7; }
-
-  .timeline-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
-  .timeline-event { text-align: center; }
-  .timeline-event .tag { border-radius: 3px; padding: 1px 6px; font-size: 9px; font-weight: 600; color: #fff; }
+  .timeline-row { display: flex; align-items: center; gap: 4px; margin-top: 3px; }
+  .timeline-event { text-align: center; flex-shrink: 0; }
+  .timeline-event .tag { border-radius: 3px; padding: 1px 5px; font-size: 8px; font-weight: 600; color: #fff; }
   .timeline-event .tag.green { background: #238636; }
   .timeline-event .tag.red { background: #da3633; }
-  .timeline-event .ttime { font-size: 8px; color: #8b949e; margin-top: 1px; }
-  .timeline-event .tsvc { font-size: 7px; color: #484f58; }
+  .timeline-event .tag.yellow { background: #9e6a03; }
+  .timeline-event .tag.blue { background: #1f6feb; }
+  .timeline-event .ttime { font-size: 7px; color: #8b949e; margin-top: 1px; }
+  .timeline-event .tsvc { font-size: 6px; color: #484f58; }
   .timeline-line { flex: 1; height: 1px; background: #2a2e38; }
 
-  table { width: 100%; border-collapse: collapse; font-size: 10px; }
-  th { text-align: left; padding: 4px 6px; background: #1c2028; color: #8b949e; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; font-size: 8px; border-bottom: 1px solid #2a2e38; }
-  td { padding: 3px 6px; border-bottom: 1px solid #1c2028; white-space: nowrap; }
+  table { width: 100%; border-collapse: collapse; font-size: 9px; }
+  th { text-align: left; padding: 3px 4px; background: #1c2028; color: #8b949e; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; font-size: 7px; border-bottom: 1px solid #2a2e38; }
+  td { padding: 2px 4px; border-bottom: 1px solid #1c2028; white-space: nowrap; }
   .status-ok { color: #3fb950; }
   .status-warn { color: #d29922; }
   .status-crit { color: #f85149; }
-  .table-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
-  .table-header h3 { font-size: 11px; font-weight: 600; }
-  .table-header .count { font-size: 9px; color: #8b949e; }
+  .status-degrade { color: #f0883e; }
+  .table-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; }
+  .table-header h3 { font-size: 10px; font-weight: 600; }
+  .table-header .count { font-size: 8px; color: #8b949e; }
+  .sparkline { display: inline-block; vertical-align: middle; }
   svg text { font-family: 'Inter', -apple-system, sans-serif; }
+
+  .alert-strip { display: flex; gap: 6px; align-items: center; padding: 4px 8px; background: #1c1214; border: 1px solid #5c2020; border-radius: 4px; font-size: 8px; }
+  .alert-strip .sev { font-weight: 700; }
+  .alert-strip .sev-crit { color: #f85149; }
+  .alert-strip .sev-warn { color: #d29922; }
+
+  .dep-graph { display: flex; align-items: center; gap: 2px; font-size: 7px; flex-wrap: wrap; }
+  .dep-node { padding: 2px 5px; border-radius: 3px; border: 1px solid #2a2e38; color: #8b949e; }
+  .dep-node.hot { border-color: #f85149; color: #f85149; }
+  .dep-node.warm { border-color: #d29922; color: #d29922; }
+  .dep-arrow { color: #484f58; font-size: 9px; }
+
+  .mini-table { font-size: 8px; }
+  .mini-table th { font-size: 7px; padding: 2px 3px; }
+  .mini-table td { font-size: 8px; padding: 2px 3px; }
 </style>
 </head>
 <body>
 
 <div class="topbar">
   <div class="logo">CloudOps Monitor</div>
-  <div style="display:flex;align-items:center;gap:10px;">
-    <span class="time">2025-06-15 14:42 UTC</span>
-    <span id="alert-badge" class="alerts">3 Alerts</span>
+  <div class="cluster-tabs">
+    <span class="cluster-tab active">us-east-1</span>
+    <span class="cluster-tab">eu-west-1</span>
+    <span class="cluster-tab">ap-southeast-1</span>
+  </div>
+  <div class="right">
+    <span class="env-badge">PROD</span>
+    <span class="time">2025-06-15 14:42:18 UTC</span>
+    <span class="alerts">5 Alerts</span>
   </div>
 </div>
 
 <div class="main-grid">
-  <!-- Row 1: 6 compact metric cards -->
-  <div class="panel p-cpu" id="cpu-panel">
-    <div class="panel-title">CPU Usage</div>
+  <!-- Row 1: 8 compact metric cards -->
+  <div class="panel" id="cpu-panel">
+    <div class="panel-title">CPU <span class="region">us-east-1</span></div>
     <div class="chart-area">
-      <svg width="100%" height="45" viewBox="0 0 160 45">
-        <polyline points="0,35 15,32 30,28 45,25 60,20 75,16 90,12 105,10 120,8 135,6 145,5 160,4" fill="none" stroke="#2ea043" stroke-width="1" opacity="0.4"/>
-        <polyline points="0,38 15,35 30,30 45,24 60,18 75,14 90,10 105,8 120,6 135,5 145,4 160,3" fill="none" stroke="#f0883e" stroke-width="1" opacity="0.4"/>
-        <polyline id="cpu-alpha-line" points="0,40 15,36 30,32 45,26 60,20 75,15 90,10 105,7 120,5 135,4 145,3 160,3" fill="none" stroke="#f85149" stroke-width="1.5"/>
-        <line x1="0" y1="8" x2="160" y2="8" stroke="#da3633" stroke-width="0.5" stroke-dasharray="3,2"/>
-        <text x="162" y="10" class="threshold-label">80%</text>
+      <svg width="100%" height="38" viewBox="0 0 140 38">
+        <polyline points="0,30 10,28 20,24 30,20 40,18 50,15 60,12 70,9 80,7 90,6 100,5 110,4 120,4 130,3 140,3" fill="none" stroke="#f85149" stroke-width="1.2"/>
+        <polyline points="0,32 10,30 20,26 30,22 40,19 50,16 60,14 70,11 80,9 90,8 100,7 110,7 120,6 130,6 140,5" fill="none" stroke="#f0883e" stroke-width="0.8" opacity="0.6"/>
+        <polyline points="0,34 10,33 20,31 30,29 40,27 50,25 60,23 70,22 80,20 90,19 100,18 110,18 120,17 130,17 140,16" fill="none" stroke="#3fb950" stroke-width="0.8" opacity="0.5"/>
+        <line x1="0" y1="7" x2="140" y2="7" stroke="#da3633" stroke-width="0.4" stroke-dasharray="2,1.5"/>
+        <text x="141" y="9" font-size="6" fill="#da3633">80%</text>
       </svg>
     </div>
-    <div id="cpu-alpha-value" class="panel-value" style="color:#f85149;">87%</div>
-    <div class="panel-sub">service-alpha · Peak 14:38</div>
-    <div class="footnote" id="cpu-footnote">Avg 3 replicas · excl idle</div>
+    <div class="panel-value" style="color:#f85149;">92%</div>
+    <div class="panel-sub">auth-service · 3 replicas</div>
+    <div class="footnote">Peak 14:38 · <span class="delta-down">↑18%</span> vs 1h</div>
   </div>
 
-  <div class="panel p-mem" id="memory-panel">
-    <div class="panel-title">Memory</div>
+  <div class="panel" id="memory-panel">
+    <div class="panel-title">Memory <span class="region">cluster avg</span></div>
     <div class="chart-area">
-      <svg width="100%" height="45" viewBox="0 0 160 45">
-        <polyline points="0,20 20,19 40,18 60,17 80,17 100,16 120,15 140,15 160,14" fill="none" stroke="#58a6ff" stroke-width="1.5"/>
+      <svg width="100%" height="38" viewBox="0 0 140 38">
+        <polyline points="0,20 15,19 30,18 45,17 60,16 75,15 90,15 105,14 120,14 140,13" fill="none" stroke="#58a6ff" stroke-width="1.2"/>
+        <rect x="0" y="30" width="140" height="5" rx="1" fill="#2a2e38"/>
+        <rect x="0" y="30" width="100" height="5" rx="1" fill="#58a6ff" opacity="0.6"/>
       </svg>
     </div>
-    <div class="panel-value" style="color:#58a6ff;">72%</div>
-    <div class="panel-sub">service-beta · Stable</div>
+    <div class="panel-value" style="color:#58a6ff;">71%</div>
+    <div class="panel-sub">24.8 / 35 GiB used</div>
+    <div class="footnote">OOM risk: ml-inference (89%)</div>
   </div>
 
-  <div class="panel p-net" id="network-panel">
-    <div class="panel-title">Network I/O</div>
+  <div class="panel" id="network-panel">
+    <div class="panel-title">Network I/O <span class="region">aggregate</span></div>
     <div class="chart-area">
-      <svg width="100%" height="45" viewBox="0 0 160 45">
-        <polyline points="0,25 20,23 40,26 60,22 80,25 100,23 120,25 140,24 160,25" fill="none" stroke="#a371f7" stroke-width="1.5"/>
+      <svg width="100%" height="38" viewBox="0 0 140 38">
+        <polyline points="0,22 10,20 20,23 30,19 40,21 50,18 60,22 70,20 80,19 90,21 100,18 110,20 120,19 130,21 140,20" fill="none" stroke="#a371f7" stroke-width="1.2"/>
+        <polyline points="0,28 10,30 20,27 30,31 40,29 50,32 60,28 70,30 80,31 90,29 100,32 110,30 120,31 130,29 140,30" fill="none" stroke="#79c0ff" stroke-width="0.8" opacity="0.6"/>
       </svg>
     </div>
-    <div class="panel-value" style="color:#a371f7;">1.2 Gbps</div>
-    <div class="panel-sub">Inbound · Normal</div>
+    <div class="panel-value" style="color:#a371f7;">2.8 Gbps</div>
+    <div class="panel-sub">In 2.8G / Out 1.9G</div>
+    <div class="footnote">Saturation: 42% of 10G link</div>
   </div>
 
-  <div class="panel p-err" id="error-panel">
-    <div class="panel-title">Error Rate (5xx)</div>
+  <div class="panel" id="error-panel">
+    <div class="panel-title">Error Rate <span class="region">5xx global</span></div>
     <div class="chart-area">
-      <svg width="100%" height="45" viewBox="0 0 160 45">
-        <polyline points="0,40 20,40 40,39 60,40 80,39 100,40 120,39 130,20 140,36 160,39" fill="none" stroke="#f85149" stroke-width="1.5"/>
-        <circle id="error-spike" cx="130" cy="20" r="2.5" fill="#f85149"/>
+      <svg width="100%" height="38" viewBox="0 0 140 38">
+        <polyline points="0,34 15,34 30,33 45,34 60,33 75,34 85,28 90,14 95,20 100,30 115,33 130,34 140,34" fill="none" stroke="#f85149" stroke-width="1.2"/>
+        <circle cx="90" cy="14" r="2" fill="#f85149"/>
+        <text x="90" y="10" font-size="6" fill="#f85149" text-anchor="middle">0.8%</text>
       </svg>
     </div>
     <div class="panel-value" style="color:#3fb950;">0.02%</div>
-    <div class="panel-sub">spike 0.8% @14:20</div>
+    <div class="panel-sub">spike 0.8% @14:20 (svc-gamma)</div>
+    <div class="footnote">Budget: 0.1% · Remaining: 98.2%</div>
   </div>
 
-  <div class="panel p-lat" id="latency-mini">
-    <div class="panel-title">P99 Latency</div>
+  <div class="panel" id="latency-mini">
+    <div class="panel-title">P99 Latency <span class="region">edge proxy</span></div>
     <div class="chart-area">
-      <svg width="100%" height="45" viewBox="0 0 160 45">
-        <polyline points="0,38 20,37 40,38 60,37 80,36 100,35 110,30 120,8 125,14 135,34 150,37 160,38" fill="none" stroke="#d29922" stroke-width="1.5"/>
-        <circle id="latency-spike-mini" cx="120" cy="8" r="2.5" fill="#d29922"/>
+      <svg width="100%" height="38" viewBox="0 0 140 38">
+        <polyline points="0,32 15,31 30,32 45,31 60,30 75,28 85,24 95,6 100,12 110,28 125,31 140,32" fill="none" stroke="#d29922" stroke-width="1.2"/>
+        <circle cx="95" cy="6" r="2" fill="#d29922"/>
       </svg>
     </div>
     <div class="panel-value" style="color:#d29922;">892ms</div>
-    <div class="panel-sub">peak @14:15 · gamma</div>
+    <div class="panel-sub">peak @14:15 · svc-gamma</div>
+    <div class="footnote">SLA breach 1m42s · threshold 500ms</div>
   </div>
 
-  <div class="panel p-dep" id="deploy-mini">
-    <div class="panel-title">Deployments</div>
-    <div class="chart-area" style="display:flex;align-items:center;justify-content:center;gap:4px;">
-      <span class="tag green" style="background:#238636;color:#fff;border-radius:3px;padding:1px 5px;font-size:8px;font-weight:600;">v2.3.1</span>
-      <span class="tag green" style="background:#238636;color:#fff;border-radius:3px;padding:1px 5px;font-size:8px;font-weight:600;">v2.3.2</span>
-      <span class="tag red" style="background:#da3633;color:#fff;border-radius:3px;padding:1px 5px;font-size:8px;font-weight:600;">v2.4.0</span>
-      <span class="tag red" style="background:#da3633;color:#fff;border-radius:3px;padding:1px 5px;font-size:8px;font-weight:600;">↩ rollback</span>
+  <div class="panel" id="rps-panel">
+    <div class="panel-title">Requests/sec <span class="region">all endpoints</span></div>
+    <div class="chart-area">
+      <svg width="100%" height="38" viewBox="0 0 140 38">
+        <polyline points="0,30 10,25 20,22 30,18 40,15 50,12 60,10 70,11 80,8 90,7 100,9 110,8 120,6 130,7 140,6" fill="none" stroke="#3fb950" stroke-width="1.2"/>
+        <line x1="0" y1="10" x2="140" y2="10" stroke="#484f58" stroke-width="0.4" stroke-dasharray="2,1.5"/>
+      </svg>
     </div>
-    <div class="panel-value" style="font-size:14px;">4 today</div>
-    <div class="panel-sub">1 rollback · gamma</div>
+    <div class="panel-value" style="color:#3fb950;">14.2K</div>
+    <div class="panel-sub">↑ 23% vs yesterday</div>
+    <div class="footnote">Peak 16.8K @13:30 · 429s: 0.3%</div>
   </div>
 
-  <!-- Row 2: Detailed latency chart + Deployment timeline -->
-  <div class="panel p-lat-wide" id="latency-panel">
-    <div class="panel-title">P99 Latency — 24h Detail</div>
-    <div class="chart-area" style="height:70px;">
-      <svg width="100%" height="70" viewBox="0 0 340 70">
-        <text x="0" y="68" font-size="7" fill="#484f58">00:00</text>
-        <text x="50" y="68" font-size="7" fill="#484f58">04:00</text>
-        <text x="100" y="68" font-size="7" fill="#484f58">08:00</text>
-        <text x="150" y="68" font-size="7" fill="#484f58">12:00</text>
-        <text x="200" y="68" font-size="7" fill="#484f58">13:00</text>
-        <text x="230" y="68" font-size="7" fill="#484f58">14:00</text>
-        <text x="250" y="68" font-size="7" fill="#484f58">14:15</text>
-        <text x="290" y="68" font-size="7" fill="#484f58">15:00</text>
-        <text x="325" y="68" font-size="7" fill="#484f58">Now</text>
-        <line x1="0" y1="55" x2="340" y2="55" stroke="#1c2028" stroke-width="0.5"/>
-        <line x1="0" y1="35" x2="340" y2="35" stroke="#1c2028" stroke-width="0.5"/>
-        <line x1="0" y1="15" x2="340" y2="15" stroke="#da3633" stroke-width="0.5" stroke-dasharray="3,2"/>
-        <text x="342" y="17" font-size="7" fill="#da3633">500ms</text>
-        <polyline points="0,52 30,51 60,52 90,50 120,52 150,51 180,50 200,48 220,42 240,8 248,16 260,45 280,50 300,52 320,51 340,52" fill="none" stroke="#d29922" stroke-width="1.5"/>
-        <circle id="latency-spike" cx="240" cy="8" r="3" fill="#d29922" stroke="#0f1117" stroke-width="1.5"/>
-        <text id="latency-spike-label" x="240" y="5" font-size="8" fill="#d29922" text-anchor="middle" font-weight="600">892ms</text>
+  <div class="panel" id="db-panel">
+    <div class="panel-title">Database <span class="region">pg-primary</span></div>
+    <div class="chart-area">
+      <svg width="100%" height="38" viewBox="0 0 140 38">
+        <polyline points="0,25 15,24 30,22 45,20 60,18 75,16 90,17 105,15 120,14 140,13" fill="none" stroke="#f0883e" stroke-width="1.2"/>
+        <rect x="0" y="32" width="140" height="4" rx="1" fill="#2a2e38"/>
+        <rect x="0" y="32" width="108" height="4" rx="1" fill="#f0883e" opacity="0.7"/>
+      </svg>
+    </div>
+    <div class="panel-value" style="color:#f0883e;">847</div>
+    <div class="panel-sub">active connections / 1000</div>
+    <div class="footnote">Repl lag: 120ms · IOPS: 12.4K</div>
+  </div>
+
+  <div class="panel" id="queue-panel">
+    <div class="panel-title">Queue Depth <span class="region">kafka</span></div>
+    <div class="chart-area">
+      <svg width="100%" height="38" viewBox="0 0 140 38">
+        <polyline points="0,30 15,28 30,25 45,22 55,18 65,14 75,12 85,15 95,18 105,16 115,14 125,12 135,10 140,9" fill="none" stroke="#79c0ff" stroke-width="1.2"/>
+      </svg>
+    </div>
+    <div class="panel-value" style="color:#79c0ff;">42.1K</div>
+    <div class="panel-sub">consumer lag growing</div>
+    <div class="footnote">Partitions: 24 · Throughput: 8.2K/s</div>
+  </div>
+
+  <!-- Row 2: Alert strip + dependency graph -->
+  <div class="panel p-span5" id="alerts-panel" style="padding:5px 8px;">
+    <div class="panel-title">Active Alerts</div>
+    <div style="display:flex;flex-direction:column;gap:3px;">
+      <div class="alert-strip"><span class="sev sev-crit">P0</span><span>auth-service CPU 92% &gt; 80% threshold for 8m</span><span style="margin-left:auto;color:#484f58;">14:34</span></div>
+      <div class="alert-strip"><span class="sev sev-crit">P0</span><span>svc-gamma P99 latency 892ms &gt; 500ms SLA for 1m42s</span><span style="margin-left:auto;color:#484f58;">14:15</span></div>
+      <div class="alert-strip"><span class="sev sev-warn">P1</span><span>kafka consumer lag 42K msgs · partition 7 stuck</span><span style="margin-left:auto;color:#484f58;">14:28</span></div>
+      <div class="alert-strip"><span class="sev sev-warn">P1</span><span>pg-primary connections 847/1000 (84.7%)</span><span style="margin-left:auto;color:#484f58;">14:35</span></div>
+      <div class="alert-strip"><span class="sev sev-warn">P2</span><span>ml-inference memory 89% approaching OOM</span><span style="margin-left:auto;color:#484f58;">14:10</span></div>
+    </div>
+  </div>
+
+  <div class="panel p-span3" id="deps-panel" style="padding:5px 8px;">
+    <div class="panel-title">Service Dependencies (Hot Path)</div>
+    <div class="dep-graph" style="margin-top:4px;">
+      <span class="dep-node">client</span><span class="dep-arrow">→</span>
+      <span class="dep-node">api-gw</span><span class="dep-arrow">→</span>
+      <span class="dep-node hot">auth-svc</span><span class="dep-arrow">→</span>
+      <span class="dep-node warm">svc-gamma</span><span class="dep-arrow">→</span>
+      <span class="dep-node">pg-primary</span>
+    </div>
+    <div class="dep-graph" style="margin-top:3px;">
+      <span class="dep-node">client</span><span class="dep-arrow">→</span>
+      <span class="dep-node">api-gw</span><span class="dep-arrow">→</span>
+      <span class="dep-node">order-svc</span><span class="dep-arrow">→</span>
+      <span class="dep-node warm">kafka</span><span class="dep-arrow">→</span>
+      <span class="dep-node">data-pipe</span>
+    </div>
+    <div class="dep-graph" style="margin-top:3px;">
+      <span class="dep-node">cron</span><span class="dep-arrow">→</span>
+      <span class="dep-node">ml-infer</span><span class="dep-arrow">→</span>
+      <span class="dep-node">redis</span><span class="dep-arrow">→</span>
+      <span class="dep-node">cdn</span>
+    </div>
+    <div class="footnote" style="margin-top:4px;">Red=critical · Yellow=degraded · 3 paths affected</div>
+  </div>
+
+  <!-- Row 3: Detailed latency chart + Deployment timeline -->
+  <div class="panel p-span4" id="latency-panel">
+    <div class="panel-title">P99 Latency — 24h Detail (Multi-Service)</div>
+    <div class="chart-area" style="height:80px;">
+      <svg width="100%" height="80" viewBox="0 0 420 80">
+        <text x="0" y="76" font-size="6" fill="#484f58">00:00</text>
+        <text x="60" y="76" font-size="6" fill="#484f58">04:00</text>
+        <text x="120" y="76" font-size="6" fill="#484f58">08:00</text>
+        <text x="180" y="76" font-size="6" fill="#484f58">10:00</text>
+        <text x="220" y="76" font-size="6" fill="#484f58">12:00</text>
+        <text x="270" y="76" font-size="6" fill="#484f58">13:00</text>
+        <text x="310" y="76" font-size="6" fill="#484f58">14:00</text>
+        <text x="340" y="76" font-size="6" fill="#484f58">14:15</text>
+        <text x="380" y="76" font-size="6" fill="#484f58">15:00</text>
+        <text x="410" y="76" font-size="6" fill="#484f58">Now</text>
+        <!-- grid lines -->
+        <line x1="0" y1="60" x2="420" y2="60" stroke="#1c2028" stroke-width="0.4"/>
+        <line x1="0" y1="40" x2="420" y2="40" stroke="#1c2028" stroke-width="0.4"/>
+        <line x1="0" y1="20" x2="420" y2="20" stroke="#1c2028" stroke-width="0.4"/>
+        <!-- SLA threshold -->
+        <line x1="0" y1="16" x2="420" y2="16" stroke="#da3633" stroke-width="0.5" stroke-dasharray="3,2"/>
+        <text x="422" y="18" font-size="6" fill="#da3633">500ms</text>
+        <!-- svc-gamma (main offender) -->
+        <polyline points="0,58 40,57 80,58 120,56 160,57 200,55 240,53 280,48 310,38 330,8 338,16 350,45 370,55 390,57 420,58" fill="none" stroke="#d29922" stroke-width="1.5"/>
+        <circle cx="330" cy="8" r="2.5" fill="#d29922" stroke="#0f1117" stroke-width="1"/>
+        <text x="330" y="5" font-size="7" fill="#d29922" text-anchor="middle" font-weight="600">892ms</text>
+        <!-- auth-service -->
+        <polyline points="0,55 40,54 80,53 120,52 160,51 200,49 240,46 280,42 310,38 330,35 350,40 370,48 390,52 420,54" fill="none" stroke="#f85149" stroke-width="1" opacity="0.7"/>
+        <!-- order-service -->
+        <polyline points="0,50 40,50 80,49 120,49 160,48 200,48 240,47 280,47 310,46 330,44 350,46 370,48 390,49 420,50" fill="none" stroke="#58a6ff" stroke-width="0.8" opacity="0.5"/>
+        <!-- search-engine -->
+        <polyline points="0,44 40,43 80,44 120,42 160,43 200,41 240,40 280,39 310,38 330,36 350,38 370,40 390,42 420,43" fill="none" stroke="#a371f7" stroke-width="0.8" opacity="0.5"/>
+        <!-- legend -->
+        <line x1="5" y1="4" x2="15" y2="4" stroke="#d29922" stroke-width="1.5"/>
+        <text x="17" y="6" font-size="6" fill="#d29922">svc-gamma</text>
+        <line x1="70" y1="4" x2="80" y2="4" stroke="#f85149" stroke-width="1"/>
+        <text x="82" y="6" font-size="6" fill="#f85149">auth-svc</text>
+        <line x1="120" y1="4" x2="130" y2="4" stroke="#58a6ff" stroke-width="0.8"/>
+        <text x="132" y="6" font-size="6" fill="#58a6ff">order-svc</text>
+        <line x1="180" y1="4" x2="190" y2="4" stroke="#a371f7" stroke-width="0.8"/>
+        <text x="192" y="6" font-size="6" fill="#a371f7">search</text>
       </svg>
     </div>
     <div style="display:flex;align-items:baseline;gap:8px;">
-      <span class="panel-value" style="color:#d29922;font-size:16px;">892ms</span>
+      <span class="panel-value" style="color:#d29922;font-size:14px;">892ms</span>
       <span class="panel-sub">peak @14:15 · service-gamma · SLA breach 1m42s</span>
     </div>
-    <div class="footnote" id="latency-footnote">Edge proxy · p50=45ms p95=120ms p99=892ms</div>
+    <div class="footnote">p50=45ms p95=120ms p99=892ms · Edge proxy · 4 services above p90 baseline</div>
   </div>
 
-  <div class="panel p-dep-wide" id="deploy-panel">
-    <div class="panel-title">Deployment Timeline</div>
+  <div class="panel p-span4" id="deploy-panel">
+    <div class="panel-title">Deployment Timeline + Incident Correlation</div>
     <div class="timeline-row">
       <div class="timeline-event" id="deploy-v231">
         <div class="tag green">v2.3.1</div>
-        <div class="ttime">10:30</div>
+        <div class="ttime">09:15</div>
         <div class="tsvc">gateway</div>
       </div>
       <div class="timeline-line"></div>
       <div class="timeline-event" id="deploy-v232">
         <div class="tag green">v2.3.2</div>
+        <div class="ttime">10:30</div>
+        <div class="tsvc">auth-svc</div>
+      </div>
+      <div class="timeline-line"></div>
+      <div class="timeline-event">
+        <div class="tag blue">v1.8.0</div>
+        <div class="ttime">11:45</div>
+        <div class="tsvc">ml-infer</div>
+      </div>
+      <div class="timeline-line"></div>
+      <div class="timeline-event" id="deploy-v233">
+        <div class="tag green">v2.3.3</div>
         <div class="ttime">13:45</div>
         <div class="tsvc">auth-svc</div>
       </div>
@@ -196,47 +324,109 @@
       </div>
       <div class="timeline-line"></div>
       <div class="timeline-event" id="deploy-v240-rb">
-        <div class="tag red">rollback</div>
+        <div class="tag red">↩ rollback</div>
         <div class="ttime">14:55</div>
         <div class="tsvc">svc-gamma</div>
       </div>
     </div>
-    <div class="footnote" id="deploy-footnote" style="margin-top:6px;">v2.4.0 → service-gamma @14:12 · rolled back @14:55 after latency alert</div>
 
-    <div style="margin-top:8px;">
-      <div class="panel-title">Incident Correlation</div>
-      <table style="font-size:9px;">
-        <tr><td style="color:#8b949e;">14:12</td><td>v2.4.0 deployed to <b style="color:#d29922;">service-gamma</b></td></tr>
-        <tr><td style="color:#8b949e;">14:15</td><td>P99 latency spike <b style="color:#f85149;">892ms</b> (threshold 500ms)</td></tr>
-        <tr><td style="color:#8b949e;">14:20</td><td>5xx error rate <b style="color:#f85149;">0.8%</b> spike detected</td></tr>
-        <tr><td style="color:#8b949e;">14:55</td><td>Rollback initiated · latency normalized</td></tr>
+    <div style="margin-top:6px;">
+      <div class="panel-title">Incident #INC-4827 Correlation</div>
+      <table class="mini-table" style="font-size:8px;">
+        <tr><td style="color:#8b949e;width:50px;">14:12:03</td><td>v2.4.0 deployed → <b style="color:#d29922;">service-gamma</b> (canary 10%→100% in 90s)</td></tr>
+        <tr><td style="color:#8b949e;">14:13:45</td><td>Connection pool saturation on pg-primary (847/1000)</td></tr>
+        <tr><td style="color:#8b949e;">14:15:00</td><td>P99 latency spike <b style="color:#f85149;">892ms</b> (threshold 500ms) — SLA breach</td></tr>
+        <tr><td style="color:#8b949e;">14:18:22</td><td>Cascading: auth-service p99 → 340ms (baseline 45ms)</td></tr>
+        <tr><td style="color:#8b949e;">14:20:15</td><td>5xx error rate <b style="color:#f85149;">0.8%</b> spike · 1,247 failed requests</td></tr>
+        <tr><td style="color:#8b949e;">14:28:00</td><td>Kafka consumer lag 42K msgs — partition 7 stuck</td></tr>
+        <tr><td style="color:#8b949e;">14:55:00</td><td>Rollback initiated · latency normalized @15:02</td></tr>
       </table>
     </div>
   </div>
 
-  <!-- Row 3: Compact service table -->
-  <div class="panel p-table">
+  <!-- Row 4: Request breakdown + Region comparison -->
+  <div class="panel p-span3" id="endpoint-panel">
+    <div class="panel-title">Request Rate by Endpoint (Top 8)</div>
+    <div class="chart-area" style="height:60px;">
+      <svg width="100%" height="60" viewBox="0 0 260 60">
+        <rect x="2" y="5" width="180" height="6" rx="1" fill="#3fb950" opacity="0.8"/><text x="185" y="10" font-size="6" fill="#8b949e">/api/v2/auth · 4.2K/s</text>
+        <rect x="2" y="14" width="155" height="6" rx="1" fill="#58a6ff" opacity="0.8"/><text x="160" y="19" font-size="6" fill="#8b949e">/api/v2/users · 3.6K/s</text>
+        <rect x="2" y="23" width="120" height="6" rx="1" fill="#a371f7" opacity="0.8"/><text x="125" y="28" font-size="6" fill="#8b949e">/api/v2/content · 2.8K/s</text>
+        <rect x="2" y="32" width="90" height="6" rx="1" fill="#79c0ff" opacity="0.8"/><text x="95" y="37" font-size="6" fill="#8b949e">/api/v2/search · 2.1K/s</text>
+        <rect x="2" y="41" width="60" height="6" rx="1" fill="#f0883e" opacity="0.8"/><text x="65" y="46" font-size="6" fill="#8b949e">/api/v2/orders · 1.4K/s</text>
+        <rect x="2" y="50" width="40" height="6" rx="1" fill="#d29922" opacity="0.7"/><text x="45" y="55" font-size="6" fill="#8b949e">/ws/stream · 0.9K/s</text>
+      </svg>
+    </div>
+    <div class="footnote">Total: 14.2K/s · 429 rate-limits: 42/s (0.3%) · Cache hit: 78%</div>
+  </div>
+
+  <div class="panel p-span2" id="region-panel">
+    <div class="panel-title">Cross-Region P99</div>
+    <table class="mini-table">
+      <thead><tr><th>Region</th><th>P99</th><th>Error</th><th>RPS</th></tr></thead>
+      <tbody>
+        <tr><td>us-east-1</td><td style="color:#d29922;font-weight:600;">892ms</td><td>0.02%</td><td>8.4K</td></tr>
+        <tr><td>eu-west-1</td><td>85ms</td><td>0.01%</td><td>3.8K</td></tr>
+        <tr><td>ap-southeast-1</td><td>120ms</td><td>0.03%</td><td>2.0K</td></tr>
+      </tbody>
+    </table>
+    <div class="footnote" style="margin-top:3px;">Issue isolated to us-east-1 · other regions healthy</div>
+  </div>
+
+  <div class="panel p-span3" id="resource-panel">
+    <div class="panel-title">Resource Saturation Matrix</div>
+    <table class="mini-table">
+      <thead><tr><th>Resource</th><th>Current</th><th>Limit</th><th>%Used</th><th>Trend</th></tr></thead>
+      <tbody>
+        <tr><td>pg connections</td><td style="color:#f0883e;">847</td><td>1000</td><td style="color:#f0883e;">84.7%</td><td class="delta-down">↑12%</td></tr>
+        <tr><td>redis memory</td><td>3.2G</td><td>4G</td><td>80%</td><td>→</td></tr>
+        <tr><td>kafka partitions</td><td>24/24</td><td>24</td><td style="color:#f85149;">100%</td><td class="delta-down">full</td></tr>
+        <tr><td>k8s pods (auth)</td><td>3/3</td><td>5 max</td><td>60%</td><td class="delta-down">↑ HPA</td></tr>
+        <tr><td>EBS IOPS</td><td>12.4K</td><td>16K</td><td>77.5%</td><td class="delta-down">↑8%</td></tr>
+        <tr><td>ALB connections</td><td>18.2K</td><td>50K</td><td>36.4%</td><td>→</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Row 5: Full-width service table -->
+  <div class="panel p-span8" id="service-table-panel">
     <div class="table-header">
-      <h3 id="service-table-title">Service Health</h3>
-      <span class="count">22 services · 3 warn · 1 crit</span>
+      <h3 id="service-table-title">Service Health Matrix</h3>
+      <span class="count">28 services · 2 critical · 4 degraded · 3 warning</span>
     </div>
     <table id="service-table">
       <thead>
-        <tr><th>Service</th><th>Status</th><th>CPU%</th><th>Mem%</th><th>P99ms</th><th>Err/m</th><th>Repl</th><th>Deploy</th></tr>
+        <tr><th>Service</th><th>Status</th><th>CPU%</th><th>Mem%</th><th>P99ms</th><th>Err/m</th><th>RPS</th><th>Repl</th><th>Conn</th><th>Deploy</th><th>Uptime</th><th>Region</th></tr>
       </thead>
       <tbody>
-        <tr><td>api-gateway</td><td class="status-ok">● OK</td><td>34</td><td>45</td><td>28</td><td>0</td><td>4/4</td><td>10:30</td></tr>
-        <tr><td>auth-service</td><td class="status-ok">● OK</td><td>22</td><td>38</td><td>15</td><td>0</td><td>3/3</td><td>13:45</td></tr>
-        <tr><td>order-service</td><td class="status-ok">● OK</td><td>41</td><td>58</td><td>45</td><td>0.2</td><td>5/5</td><td>Jun14</td></tr>
-        <tr><td>search-engine</td><td class="status-warn">● Warn</td><td>62</td><td>71</td><td>180</td><td>0.5</td><td>4/4</td><td>Jun14</td></tr>
-        <tr><td>cache-layer</td><td class="status-ok">● OK</td><td>8</td><td>82</td><td>2</td><td>0</td><td>6/6</td><td>Jun08</td></tr>
-        <tr id="svc-alpha"><td><b>service-alpha</b></td><td class="status-crit">● Crit</td><td style="color:#f85149;font-weight:700;">87</td><td>68</td><td>120</td><td>2.1</td><td>3/3</td><td>Jun14</td></tr>
-        <tr><td>service-beta</td><td class="status-warn">● Warn</td><td>55</td><td>72</td><td>85</td><td>0.3</td><td>3/3</td><td>Jun13</td></tr>
-        <tr id="svc-gamma"><td><b>service-gamma</b></td><td class="status-crit">● Crit</td><td>48</td><td>55</td><td style="color:#d29922;font-weight:700;">892</td><td style="color:#f85149;">4.8</td><td>3/3</td><td style="color:#da3633;">14:12</td></tr>
-        <tr><td>ml-inference</td><td class="status-ok">● OK</td><td>72</td><td>80</td><td>250</td><td>0.2</td><td>2/2</td><td>Jun14</td></tr>
-        <tr><td>data-pipeline</td><td class="status-ok">● OK</td><td>40</td><td>60</td><td>350</td><td>0.1</td><td>2/2</td><td>Jun13</td></tr>
-        <tr><td>notification</td><td class="status-ok">● OK</td><td>12</td><td>22</td><td>8</td><td>0</td><td>2/2</td><td>Jun11</td></tr>
-        <tr><td>scheduler</td><td class="status-ok">● OK</td><td>30</td><td>40</td><td>50</td><td>0.1</td><td>2/2</td><td>Jun12</td></tr>
+        <tr><td>api-gateway</td><td class="status-ok">● OK</td><td>34</td><td>45</td><td>28</td><td>0</td><td>4210</td><td>4/4</td><td>1.2K</td><td>09:15</td><td>99.99%</td><td>us-e1</td></tr>
+        <tr id="svc-auth"><td><b>auth-service</b></td><td class="status-crit">● Crit</td><td style="color:#f85149;font-weight:700;">92</td><td>68</td><td style="color:#f0883e;">340</td><td style="color:#f85149;">2.1</td><td>3640</td><td>3/3</td><td>284</td><td>10:30</td><td>99.91%</td><td>us-e1</td></tr>
+        <tr><td>order-service</td><td class="status-ok">● OK</td><td>41</td><td>58</td><td>45</td><td>0.2</td><td>1420</td><td>5/5</td><td>180</td><td>Jun14</td><td>99.98%</td><td>us-e1</td></tr>
+        <tr id="svc-gamma"><td><b>service-gamma</b></td><td class="status-crit">● Crit</td><td>48</td><td>55</td><td style="color:#d29922;font-weight:700;">892</td><td style="color:#f85149;">4.8</td><td>2100</td><td>3/3</td><td>412</td><td style="color:#da3633;">14:12</td><td style="color:#f85149;">99.72%</td><td>us-e1</td></tr>
+        <tr><td>search-engine</td><td class="status-degrade">● Degr</td><td>62</td><td>71</td><td style="color:#f0883e;">180</td><td>0.5</td><td>2080</td><td>4/4</td><td>320</td><td>Jun14</td><td>99.95%</td><td>us-e1</td></tr>
+        <tr><td>ml-inference</td><td class="status-warn">● Warn</td><td>76</td><td style="color:#f0883e;font-weight:600;">89</td><td>250</td><td>0.2</td><td>420</td><td>2/2</td><td>64</td><td>11:45</td><td>99.97%</td><td>us-e1</td></tr>
+        <tr><td>cache-layer</td><td class="status-ok">● OK</td><td>8</td><td>82</td><td>2</td><td>0</td><td>8900</td><td>6/6</td><td>2.4K</td><td>Jun08</td><td>100%</td><td>us-e1</td></tr>
+        <tr><td>service-beta</td><td class="status-degrade">● Degr</td><td>55</td><td>72</td><td>85</td><td>0.3</td><td>1180</td><td>3/3</td><td>156</td><td>Jun13</td><td>99.96%</td><td>us-e1</td></tr>
+        <tr><td>data-pipeline</td><td class="status-degrade">● Degr</td><td>40</td><td>60</td><td>350</td><td>0.1</td><td>580</td><td>2/2</td><td>48</td><td>Jun13</td><td>99.94%</td><td>us-e1</td></tr>
+        <tr><td>notification</td><td class="status-ok">● OK</td><td>12</td><td>22</td><td>8</td><td>0</td><td>340</td><td>2/2</td><td>24</td><td>Jun11</td><td>100%</td><td>us-e1</td></tr>
+        <tr><td>scheduler</td><td class="status-ok">● OK</td><td>30</td><td>40</td><td>50</td><td>0.1</td><td>120</td><td>2/2</td><td>16</td><td>Jun12</td><td>99.99%</td><td>us-e1</td></tr>
+        <tr><td>payment-svc</td><td class="status-ok">● OK</td><td>28</td><td>44</td><td>65</td><td>0</td><td>890</td><td>3/3</td><td>92</td><td>Jun14</td><td>100%</td><td>us-e1</td></tr>
+        <tr><td>user-profile</td><td class="status-ok">● OK</td><td>18</td><td>35</td><td>22</td><td>0</td><td>2400</td><td>3/3</td><td>180</td><td>Jun14</td><td>99.99%</td><td>us-e1</td></tr>
+        <tr><td>media-upload</td><td class="status-ok">● OK</td><td>44</td><td>52</td><td>180</td><td>0.1</td><td>320</td><td>2/2</td><td>28</td><td>Jun13</td><td>99.98%</td><td>us-e1</td></tr>
+        <tr><td>analytics-agg</td><td class="status-ok">● OK</td><td>58</td><td>65</td><td>420</td><td>0</td><td>180</td><td>2/2</td><td>36</td><td>Jun12</td><td>99.97%</td><td>us-e1</td></tr>
+        <tr><td>email-sender</td><td class="status-ok">● OK</td><td>5</td><td>18</td><td>12</td><td>0</td><td>45</td><td>1/1</td><td>8</td><td>Jun10</td><td>100%</td><td>us-e1</td></tr>
+        <tr><td>cdn-origin</td><td class="status-ok">● OK</td><td>22</td><td>30</td><td>4</td><td>0</td><td>12400</td><td>8/8</td><td>4.8K</td><td>Jun08</td><td>100%</td><td>multi</td></tr>
+        <tr><td>config-server</td><td class="status-ok">● OK</td><td>3</td><td>12</td><td>5</td><td>0</td><td>20</td><td>2/2</td><td>4</td><td>Jun01</td><td>100%</td><td>us-e1</td></tr>
+        <tr><td>feature-flags</td><td class="status-ok">● OK</td><td>2</td><td>8</td><td>3</td><td>0</td><td>680</td><td>2/2</td><td>12</td><td>Jun14</td><td>100%</td><td>us-e1</td></tr>
+        <tr><td>audit-logger</td><td class="status-degrade">● Degr</td><td>35</td><td>48</td><td>95</td><td>0.4</td><td>920</td><td>2/2</td><td>44</td><td>Jun14</td><td>99.95%</td><td>us-e1</td></tr>
+        <tr><td>rate-limiter</td><td class="status-ok">● OK</td><td>14</td><td>24</td><td>1</td><td>0</td><td>14200</td><td>4/4</td><td>960</td><td>Jun12</td><td>100%</td><td>us-e1</td></tr>
+        <tr><td>session-store</td><td class="status-ok">● OK</td><td>20</td><td>78</td><td>4</td><td>0</td><td>6800</td><td>3/3</td><td>1.8K</td><td>Jun10</td><td>100%</td><td>us-e1</td></tr>
+        <tr><td>webhook-relay</td><td class="status-ok">● OK</td><td>10</td><td>20</td><td>35</td><td>0</td><td>240</td><td>2/2</td><td>18</td><td>Jun13</td><td>99.99%</td><td>us-e1</td></tr>
+        <tr><td>log-aggregator</td><td class="status-warn">● Warn</td><td>68</td><td>74</td><td>150</td><td>0.2</td><td>4800</td><td>3/3</td><td>280</td><td>Jun14</td><td>99.96%</td><td>us-e1</td></tr>
+        <tr><td>dns-resolver</td><td class="status-ok">● OK</td><td>4</td><td>10</td><td>1</td><td>0</td><td>28000</td><td>4/4</td><td>-</td><td>May28</td><td>100%</td><td>multi</td></tr>
+        <tr><td>cert-manager</td><td class="status-ok">● OK</td><td>1</td><td>6</td><td>8</td><td>0</td><td>2</td><td>1/1</td><td>2</td><td>Jun01</td><td>100%</td><td>us-e1</td></tr>
+        <tr><td>job-worker</td><td class="status-warn">● Warn</td><td>72</td><td>62</td><td>1200</td><td>0.8</td><td>85</td><td>4/4</td><td>32</td><td>Jun14</td><td>99.92%</td><td>us-e1</td></tr>
+        <tr><td>graphql-gw</td><td class="status-ok">● OK</td><td>38</td><td>42</td><td>55</td><td>0.1</td><td>3200</td><td>3/3</td><td>240</td><td>Jun14</td><td>99.98%</td><td>us-e1</td></tr>
       </tbody>
     </table>
   </div>
