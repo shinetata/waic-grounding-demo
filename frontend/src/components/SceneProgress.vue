@@ -28,12 +28,13 @@ defineProps<{
 .scene-progress {
   display: flex;
   align-items: center;
-  padding: 8px 16px;
+  padding: 6px 10px;
   background: #0d0f14;
   border-radius: 10px;
   border: 1px solid #1e222a;
   gap: 0;
   flex-shrink: 0;
+  overflow-x: auto;
 }
 .progress-node {
   display: flex;
@@ -68,7 +69,7 @@ defineProps<{
   animation: pulse-ring 1.5s ease-out infinite;
 }
 .node-label {
-  font-size: 11px;
+  font-size: 10px;
   color: #484f58;
   white-space: nowrap;
   transition: color 0.3s ease;
@@ -76,10 +77,10 @@ defineProps<{
 .progress-node.active .node-label { color: #e0e0e0; font-weight: 600; }
 .progress-node.done .node-label { color: #3fb950; }
 .node-connector {
-  width: 24px;
+  width: 16px;
   height: 2px;
   background: #2a2e38;
-  margin: 0 4px;
+  margin: 0 3px;
   border-radius: 1px;
   transition: background 0.4s ease;
 }

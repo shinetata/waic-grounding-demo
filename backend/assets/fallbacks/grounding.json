@@ -27,7 +27,7 @@
       }
     ],
     "answer": "CPU使用率最高的服务是 auth-service，其CPU使用率为41，当前副本数为45。",
-    "elapsed": 3.75,
+    "elapsed": 3.5,
     "usage": {
       "prompt_tokens": 585,
       "completion_tokens": 233
@@ -48,51 +48,41 @@
     "type": "step",
     "step": 2,
     "query_index": 1,
-    "thought": "我需要在图中找到过去24小时的P99延迟图表，该图表位于左下角的'P99 LATENCY — 24H DETAIL (MULTI-SERVICES)'区域。从图表中可以看到一个明显的峰值，其数值标注为'852ms'，并标注了时间'2025-05-15 14:15'。此外，该峰值对应的警报信息在'ACTIVE ALERTS'区域中显示为'service latency P99 (852ms) > 300ms SLA (health)'，表明延迟超过了SLA阈值。同时，'RESOURCE SATURATION'区域显示'CPU'使用率为'92%'，'Memory'使用率为'71%'，'DB Connections'为'847/1000'，接近饱和。因此，峰值为852ms，发生在2025-05-15 14:15，受影响的资源是CPU、内存和数据库连接。",
+    "thought": "首先，我需要定位到显示过去24小时P99延迟的图表。在截图中，'P99 LATENCY — 24H (DETAIL: MULTI-SERVICES)' 图表位于左下角，显示了延迟随时间的变化。从图中可以看到一个明显的峰值，其数值标注为 '900ms'，发生在大约 '10:00' 的时间点。接下来，我需要查找哪些资源因此接近饱和。在 'ACTIVE ALERTS' 区域，有多个警报提示资源接近饱和，包括 'service-gateway CPU > 80% (threshold for 3min)'、'service-gateway P99 latency > 300ms (SLA breach)'、'kafka consumer lag > 100k (high) - partition 7' 和 'db-warehouse memory 85%, approaching OOM'。这些警报表明CPU、P99延迟、Kafka消费者延迟和数据库内存都接近或已达到饱和状态。",
     "groundings": [
       {
         "bbox": [
-          0.012,
-          0.477,
-          0.585,
-          0.602
+          0.014,
+          0.475,
+          0.575,
+          0.608
         ],
-        "label": "P99延迟图表，显示峰值为852ms，发生在14:15",
+        "label": "P99延迟图表，显示峰值为900ms，发生在约10:00",
         "query_index": 1
       },
       {
         "bbox": [
-          0.012,
+          0.014,
           0.325,
-          0.585,
-          0.45
+          0.575,
+          0.458
         ],
-        "label": "ACTIVE ALERTS区域，显示延迟警报",
-        "query_index": 1
-      },
-      {
-        "bbox": [
-          0.772,
-          0.698,
-          0.985,
-          0.835
-        ],
-        "label": "RESOURCE SATURATION区域，显示CPU、内存和数据库连接使用率",
+        "label": "ACTIVE ALERTS区域，列出因延迟峰值导致的资源接近饱和的警报",
         "query_index": 1
       }
     ],
-    "answer": "过去24小时P99延迟的峰值为852毫秒，发生在2025-05-15 14:15。受影响的资源包括CPU（92%）、内存（71%）和数据库连接（847/1000，接近饱和）。",
-    "elapsed": 6.82,
+    "answer": "过去24小时P99延迟的峰值为900毫秒，发生在约10:00。因此接近饱和的资源包括：service-gateway的CPU（>80%）、service-gateway的P99延迟（>300ms，SLA违约）、kafka消费者延迟（>100k，partition 7）以及db-warehouse的内存（85%，接近OOM）。",
+    "elapsed": 5.76,
     "usage": {
       "prompt_tokens": 591,
-      "completion_tokens": 456
+      "completion_tokens": 432
     }
   },
   {
     "type": "query_end",
     "query_index": 1,
     "query": "过去24小时P99延迟出现了异常峰值，峰值具体是多少毫秒？发生在什么时间？同时指出哪些资源因此接近饱和。",
-    "answer": "过去24小时P99延迟的峰值为852毫秒，发生在2025-05-15 14:15。受影响的资源包括CPU（92%）、内存（71%）和数据库连接（847/1000，接近饱和）。"
+    "answer": "过去24小时P99延迟的峰值为900毫秒，发生在约10:00。因此接近饱和的资源包括：service-gateway的CPU（>80%）、service-gateway的P99延迟（>300ms，SLA违约）、kafka消费者延迟（>100k，partition 7）以及db-warehouse的内存（85%，接近OOM）。"
   },
   {
     "type": "query_start",
@@ -117,7 +107,7 @@
       }
     ],
     "answer": "v2.4.0部署后的级联故障链条为：16:30部署v2.4.0 → 16:32服务降级 → 16:33数据库连接池耗尽 → 16:34 Kafka分区背压 → 16:34 CPU飙升 → 16:34 内存泄漏 → 16:35回滚。",
-    "elapsed": 3.96,
+    "elapsed": 4.55,
     "usage": {
       "prompt_tokens": 599,
       "completion_tokens": 328
@@ -133,7 +123,7 @@
     "type": "scene_end",
     "scene": "grounding",
     "total_steps": 3,
-    "total_groundings": 5,
+    "total_groundings": 4,
     "groundings": [
       {
         "bbox": [
@@ -147,32 +137,22 @@
       },
       {
         "bbox": [
-          0.012,
-          0.477,
-          0.585,
-          0.602
+          0.014,
+          0.475,
+          0.575,
+          0.608
         ],
-        "label": "P99延迟图表，显示峰值为852ms，发生在14:15",
+        "label": "P99延迟图表，显示峰值为900ms，发生在约10:00",
         "query_index": 1
       },
       {
         "bbox": [
-          0.012,
+          0.014,
           0.325,
-          0.585,
-          0.45
+          0.575,
+          0.458
         ],
-        "label": "ACTIVE ALERTS区域，显示延迟警报",
-        "query_index": 1
-      },
-      {
-        "bbox": [
-          0.772,
-          0.698,
-          0.985,
-          0.835
-        ],
-        "label": "RESOURCE SATURATION区域，显示CPU、内存和数据库连接使用率",
+        "label": "ACTIVE ALERTS区域，列出因延迟峰值导致的资源接近饱和的警报",
         "query_index": 1
       },
       {

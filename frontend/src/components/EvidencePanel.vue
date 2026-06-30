@@ -12,10 +12,11 @@ const props = defineProps<{
   entries: EvidenceEntry[]
 }>()
 
-const collapsed = ref(false)
+const collapsed = ref(true)
 const container = ref<HTMLElement | null>(null)
 
-watch(() => props.entries.length, async () => {
+watch(() => props.entries.length, async (len) => {
+  if (len > 0) collapsed.value = false
   await nextTick()
   if (container.value) {
     container.value.scrollTop = container.value.scrollHeight

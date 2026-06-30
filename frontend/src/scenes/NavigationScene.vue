@@ -210,34 +210,34 @@ defineExpose({ start, stop })
 <style scoped>
 .navigation-scene {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   height: 100%;
-  padding: 16px;
+  padding: 12px;
 }
 .nav-left {
-  width: 220px;
+  width: 200px;
   flex-shrink: 0;
+  align-self: flex-start;
 }
 .nav-main {
   flex: 1;
   min-width: 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
 }
 .nav-right {
   width: 340px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   overflow: hidden;
 }
 .task-card {
   background: #111318;
   border: 1px solid #1e222a;
   border-radius: 10px;
-  padding: 14px;
+  padding: 10px 14px;
   flex-shrink: 0;
 }
 .task-label {
@@ -245,11 +245,11 @@ defineExpose({ start, stop })
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: #8b949e;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 .task-text {
-  font-size: 14px;
+  font-size: 13px;
   color: #e0e0e0;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 </style>
