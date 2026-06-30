@@ -35,6 +35,27 @@
       <div class="stat-card"><div class="label">Bounce Rate</div><div class="value">34.2%</div><div class="sub">↓ 1.2%</div></div>
     </div>
 
+    <div class="card" id="analytics-anomaly" style="border-color:#ef4444;background:#fff5f5;">
+      <div class="card-title" style="color:#991b1b;display:flex;align-items:center;justify-content:space-between;">
+        <span>⚠ Anomalous Export Traffic Detected</span>
+        <span class="badge-danger" style="font-size:11px;">Investigate</span>
+      </div>
+      <table>
+        <thead><tr><th>Endpoint</th><th>Volume (24h)</th><th>Baseline</th><th>Spike Window</th><th>Source</th><th>Data Exported</th></tr></thead>
+        <tbody>
+          <tr style="background:#fef2f2;">
+            <td style="font-weight:600;">/api/v2/export</td>
+            <td style="color:#ef4444;font-weight:700;">3.2× baseline</td>
+            <td>4,500/day</td>
+            <td>Jun 15, 03:00–03:15</td>
+            <td style="color:#ef4444;">45.227.198.x (single IP range)</td>
+            <td style="color:#ef4444;font-weight:600;">14.2 MB</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="margin-top:10px;font-size:11px;color:#991b1b;">⚠ Sustained bulk export from a single unrecognized IP range outside business hours — pattern consistent with data exfiltration.</div>
+    </div>
+
     <div class="charts-grid">
       <div class="card" id="traffic-chart">
         <div class="card-title">Daily Traffic (Last 30 Days)</div>

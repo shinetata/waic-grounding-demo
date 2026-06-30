@@ -49,34 +49,35 @@
     <div class="card" id="alerts-card">
       <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;">
         Unresolved Alerts
-        <span id="alert-count" class="badge-danger" style="font-size:12px;padding:4px 12px;">3 unresolved</span>
+        <span id="alert-count" class="badge-warn" style="font-size:12px;padding:4px 12px;">3 open</span>
       </div>
       <table>
         <thead><tr><th>Severity</th><th>Alert</th><th>Source</th><th>Time</th><th>Status</th></tr></thead>
         <tbody>
-          <tr id="alert-permission">
-            <td><span class="badge-danger">Critical</span></td>
-            <td>Role escalation detected: guest → admin privileges</td>
-            <td>Permission Engine</td>
-            <td>Jun 14, 22:15</td>
+          <tr id="alert-1">
+            <td><span class="badge-warn">Warning</span></td>
+            <td>Unusual after-hours activity detected (02:00–04:00 window)</td>
+            <td>Activity Monitor</td>
+            <td>Jun 15, 04:00</td>
             <td><span class="badge-warn">Open</span></td>
           </tr>
-          <tr id="alert-apikey">
+          <tr id="alert-2">
             <td><span class="badge-warn">Warning</span></td>
-            <td>API key 'prod-master-key' has no expiration set</td>
+            <td>1 production API key missing expiration policy</td>
             <td>Key Manager</td>
             <td>Jun 12, 09:30</td>
             <td><span class="badge-warn">Open</span></td>
           </tr>
-          <tr id="alert-login">
+          <tr id="alert-3">
             <td><span class="badge-warn">Warning</span></td>
-            <td>Unusual login activity from unrecognized IP range</td>
-            <td>Auth Monitor</td>
-            <td>Jun 15, 03:42</td>
+            <td>Recent role permission changes pending review</td>
+            <td>Permission Engine</td>
+            <td>Jun 14, 22:15</td>
             <td><span class="badge-warn">Open</span></td>
           </tr>
         </tbody>
       </table>
+      <div style="margin-top:12px;font-size:11px;color:#9ca3af;">⚠ 3 open warnings span multiple modules — audit each area before closing.</div>
     </div>
 
     <div class="card">

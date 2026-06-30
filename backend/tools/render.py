@@ -36,12 +36,12 @@ PAGES: dict[str, dict] = {
         "file": "overview.html",
         "elements": [
             "overview-uptime", "alerts-card", "alert-count",
-            "alert-permission", "alert-apikey", "alert-login",
+            "alert-1", "alert-2", "alert-3",
         ],
     },
     "users": {
         "file": "users.html",
-        "elements": ["user-table", "user-guest-admin"],
+        "elements": ["user-table", "user-mfa-disabled"],
     },
     "permissions": {
         "file": "permissions.html",
@@ -60,6 +60,7 @@ PAGES: dict[str, dict] = {
     "analytics": {
         "file": "analytics.html",
         "elements": [
+            "analytics-anomaly",
             "traffic-chart", "geo-chart", "device-chart", "endpoint-chart",
         ],
     },

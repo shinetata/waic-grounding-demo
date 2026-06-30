@@ -72,6 +72,7 @@ class StageInfo:
     title: str
     image_path: Path
     elements: list[dict] = field(default_factory=list)
+    clue_element_id: str | None = None
 
 
 def image_to_b64(img: Image.Image, fmt: str = "PNG") -> str:
