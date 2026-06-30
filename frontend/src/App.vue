@@ -11,11 +11,18 @@ const playState = ref<PlayState>('stopped')
 const groundingRef = ref<InstanceType<typeof GroundingScene> | null>(null)
 const navigationRef = ref<InstanceType<typeof NavigationScene> | null>(null)
 
-let pendingSwitch: ReturnType<typeof setTimeout> | null = null
+let switchTimer: ReturnType<typeof setTimeout> | null = null
+
+function clearSwitchTimer() {
+  if (switchTimer) { clearTimeout(switchTimer); switchTimer = null }
+}
 
 function switchScene(scene: Scene) {
+  clearSwitchTimer()
   currentScene.value = scene
-  setTimeout(() => {
+  switchTimer = setTimeout(() => {
+    switchTimer = null
+    if (playState.value === 'stopped') return
     if (scene === 'grounding') groundingRef.value?.start()
     else navigationRef.value?.start()
   }, 300)
@@ -34,10 +41,7 @@ function play() {
 
 function pause() {
   playState.value = 'paused'
-  if (pendingSwitch) {
-    clearTimeout(pendingSwitch)
-    pendingSwitch = null
-  }
+  clearSwitchTimer()
 }
 
 function resume() {
@@ -46,10 +50,7 @@ function resume() {
 
 function stop() {
   playState.value = 'stopped'
-  if (pendingSwitch) {
-    clearTimeout(pendingSwitch)
-    pendingSwitch = null
-  }
+  clearSwitchTimer()
   groundingRef.value?.stop?.()
   navigationRef.value?.stop?.()
 }
