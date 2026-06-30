@@ -4,13 +4,16 @@ import ScreenshotView from '../components/ScreenshotView.vue'
 import ThoughtStream from '../components/ThoughtStream.vue'
 import QueryCard from '../components/QueryCard.vue'
 import SummaryCard from '../components/SummaryCard.vue'
+import SceneProgress from '../components/SceneProgress.vue'
+import EvidencePanel from '../components/EvidencePanel.vue'
 import type { Grounding } from '../components/ScreenshotView.vue'
 import type { ThoughtEntry } from '../components/ThoughtStream.vue'
+import type { EvidenceEntry } from '../components/EvidencePanel.vue'
 import { useWebSocket, type DemoEvent } from '../composables/useWebSocket'
 
 const emit = defineEmits<{ done: [] }>()
 
-const { events, running, connect } = useWebSocket()
+const { events, running, connect, disconnect } = useWebSocket()
 const imageSrc = ref('')
 
 const queries = [
@@ -21,6 +24,7 @@ const queries = [
 
 const currentQueryIndex = ref(0)
 const showSummary = ref(false)
+let doneTimer: ReturnType<typeof setTimeout> | null = null
 
 const groundings = computed<Grounding[]>(() => {
   const result: Grounding[] = []
@@ -45,6 +49,32 @@ const thoughts = computed<ThoughtEntry[]>(() => {
     }))
 })
 
+const evidenceEntries = computed<EvidenceEntry[]>(() => {
+  const entries: EvidenceEntry[] = []
+  for (const evt of events.value) {
+    if (evt.type !== 'step') continue
+    if (evt.groundings?.length) {
+      const bboxes = evt.groundings.map((g: any) =>
+        `[${g.bbox.map((v: number) => v.toFixed(3)).join(', ')}]`
+      ).join(' ')
+      entries.push({ step: evt.step, type: 'coordinates', raw: bboxes })
+    }
+    if (evt.thought) {
+      entries.push({ step: evt.step, type: 'reasoning', raw: evt.thought })
+    }
+  }
+  return entries
+})
+
+const progressSteps = computed(() => {
+  return queries.map((q, i) => ({
+    label: `Q${i + 1}`,
+    status: i < currentQueryIndex.value ? 'done'
+      : i === currentQueryIndex.value ? 'active'
+      : 'idle',
+  })) as Array<{ label: string; status: 'idle' | 'active' | 'done' }>
+})
+
 const summaryData = computed(() => {
   const end = events.value.find((e: DemoEvent) => e.type === 'scene_end')
   if (!end) return null
@@ -62,7 +92,7 @@ watch(events, (evts) => {
   }
   if (latest.type === 'scene_end') {
     showSummary.value = true
-    setTimeout(() => emit('done'), 8000)
+    doneTimer = setTimeout(() => emit('done'), 8000)
   }
   if (latest.type === 'error') {
     console.error('Demo error:', latest.message)
@@ -70,12 +100,20 @@ watch(events, (evts) => {
 })
 
 function start() {
+  if (doneTimer) { clearTimeout(doneTimer); doneTimer = null }
   showSummary.value = false
   imageSrc.value = '/assets/pages/dashboard.png'
   connect('grounding')
 }
 
-defineExpose({ start })
+function stop() {
+  if (doneTimer) { clearTimeout(doneTimer); doneTimer = null }
+  disconnect()
+  showSummary.value = false
+  events.value = []
+}
+
+defineExpose({ start, stop })
 </script>
 
 <template>
@@ -87,6 +125,7 @@ defineExpose({ start })
       />
     </div>
     <div class="scene-side">
+      <SceneProgress :steps="progressSteps" />
       <div class="query-section">
         <QueryCard
           v-for="(q, i) in queries"
@@ -98,6 +137,7 @@ defineExpose({ start })
         />
       </div>
       <ThoughtStream :entries="thoughts" title="推理过程" />
+      <EvidencePanel :entries="evidenceEntries" />
       <SummaryCard
         v-if="showSummary && summaryData"
         scene="grounding"

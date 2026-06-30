@@ -27,7 +27,7 @@
       },
       {
         "bbox": [
-          0.359,
+          0.35,
           0.508,
           0.383,
           0.528
@@ -37,7 +37,7 @@
       }
     ],
     "answer": "CPU使用率最高的服务是 cache-layer，其具体数值为 87%。",
-    "elapsed": 3.3,
+    "elapsed": 3.47,
     "usage": {
       "prompt_tokens": 645,
       "completion_tokens": 185
@@ -58,24 +58,24 @@
     "type": "step",
     "step": 2,
     "query_index": 1,
-    "thought": "我需要找到过去24小时P99延迟的详细图表，该图表位于界面左上角区域。图表下方有文字说明，明确指出了峰值时间和数值。根据图表和文字描述，峰值发生在14:15，数值为892ms。",
+    "thought": "我需要找到过去24小时P99延迟的详细图表，该图表位于界面左上角区域。图表下方有文字说明，明确标注了峰值时间和数值。通过观察，可以看到峰值发生在14:15，数值为892ms，并且有SLA breach的提示。",
     "groundings": [
       {
         "bbox": [
           0.01,
-          0.19,
-          0.485,
-          0.344
+          0.192,
+          0.495,
+          0.345
         ],
-        "label": "P99 LATENCY — 24H DETAIL 图表及说明",
+        "label": "P99 LATENCY — 24H DETAIL 图表区域，包含峰值信息",
         "query_index": 1
       }
     ],
     "answer": "有异常峰值。具体在14:15，峰值为892ms。",
-    "elapsed": 3.75,
+    "elapsed": 3.18,
     "usage": {
       "prompt_tokens": 647,
-      "completion_tokens": 148
+      "completion_tokens": 157
     }
   },
   {
@@ -93,13 +93,13 @@
     "type": "step",
     "step": 3,
     "query_index": 2,
-    "thought": "我需要找到延迟峰值的时间点，并在部署时间线中找到对应时间的部署事件。首先，观察P99 LATENCY — 24H DETAIL面板，峰值出现在14:15，标记为892ms，服务为service-gamma。接着，在DEPLOYMENT TIMELINE面板中，我看到在14:12有一个部署事件，版本为v2.41，目标服务是service-gamma，且在14:15时有'P99 latency spike 892ms'的incident correlation记录，这与延迟峰值时间点吻合。因此，延迟峰值与14:12的v2.41部署相关。",
+    "thought": "我需要找到延迟峰值的时间点，并在部署时间线中查找对应时间的部署事件。首先，在'P99 LATENCY — 24H DETAIL'面板中，延迟峰值出现在14:15，数值为892ms。接着，在'DEPLOYMENT TIMELINE'面板中，我看到在14:12有一个部署事件，版本为v2.41，部署到service-gamma服务。这个时间点非常接近延迟峰值的时间（14:15），且部署的服务正是延迟峰值中提到的'service-gamma'，因此可以推断这次部署与延迟峰值有关。",
     "groundings": [
       {
         "bbox": [
           0.01,
-          0.197,
-          0.485,
+          0.192,
+          0.492,
           0.35
         ],
         "label": "P99延迟24小时详情面板，显示峰值892ms发生在14:15，服务为service-gamma",
@@ -107,27 +107,27 @@
       },
       {
         "bbox": [
-          0.495,
-          0.197,
+          0.498,
+          0.192,
           0.985,
           0.35
         ],
-        "label": "部署时间线面板，显示14:12部署v2.41到service-gamma，并在14:15记录了延迟峰值事件",
+        "label": "部署时间线面板，显示14:12部署了v2.41版本到service-gamma服务",
         "query_index": 2
       }
     ],
-    "answer": "延迟峰值与14:12部署的v2.41版本到service-gamma服务有关。",
-    "elapsed": 5.45,
+    "answer": "延迟峰值（14:15，892ms）与14:12部署到service-gamma服务的v2.41版本有关。",
+    "elapsed": 6.18,
     "usage": {
       "prompt_tokens": 650,
-      "completion_tokens": 323
+      "completion_tokens": 312
     }
   },
   {
     "type": "query_end",
     "query_index": 2,
     "query": "这个延迟峰值和哪次部署操作有关？请同时定位延迟面板和部署时间线中的相关事件。",
-    "answer": "延迟峰值与14:12部署的v2.41版本到service-gamma服务有关。"
+    "answer": "延迟峰值（14:15，892ms）与14:12部署到service-gamma服务的v2.41版本有关。"
   },
   {
     "type": "scene_end",
@@ -147,7 +147,7 @@
       },
       {
         "bbox": [
-          0.359,
+          0.35,
           0.508,
           0.383,
           0.528
@@ -158,18 +158,18 @@
       {
         "bbox": [
           0.01,
-          0.19,
-          0.485,
-          0.344
+          0.192,
+          0.495,
+          0.345
         ],
-        "label": "P99 LATENCY — 24H DETAIL 图表及说明",
+        "label": "P99 LATENCY — 24H DETAIL 图表区域，包含峰值信息",
         "query_index": 1
       },
       {
         "bbox": [
           0.01,
-          0.197,
-          0.485,
+          0.192,
+          0.492,
           0.35
         ],
         "label": "P99延迟24小时详情面板，显示峰值892ms发生在14:15，服务为service-gamma",
@@ -177,12 +177,12 @@
       },
       {
         "bbox": [
-          0.495,
-          0.197,
+          0.498,
+          0.192,
           0.985,
           0.35
         ],
-        "label": "部署时间线面板，显示14:12部署v2.41到service-gamma，并在14:15记录了延迟峰值事件",
+        "label": "部署时间线面板，显示14:12部署了v2.41版本到service-gamma服务",
         "query_index": 2
       }
     ]

@@ -4,10 +4,14 @@ import GroundingScene from './scenes/GroundingScene.vue'
 import NavigationScene from './scenes/NavigationScene.vue'
 
 type Scene = 'grounding' | 'navigation'
+type PlayState = 'playing' | 'paused' | 'stopped'
 
 const currentScene = ref<Scene>('grounding')
+const playState = ref<PlayState>('stopped')
 const groundingRef = ref<InstanceType<typeof GroundingScene> | null>(null)
 const navigationRef = ref<InstanceType<typeof NavigationScene> | null>(null)
+
+let pendingSwitch: ReturnType<typeof setTimeout> | null = null
 
 function switchScene(scene: Scene) {
   currentScene.value = scene
@@ -18,17 +22,46 @@ function switchScene(scene: Scene) {
 }
 
 function handleDone() {
+  if (playState.value !== 'playing') return
   const next: Scene = currentScene.value === 'grounding' ? 'navigation' : 'grounding'
   switchScene(next)
 }
 
+function play() {
+  playState.value = 'playing'
+  switchScene('grounding')
+}
+
+function pause() {
+  playState.value = 'paused'
+  if (pendingSwitch) {
+    clearTimeout(pendingSwitch)
+    pendingSwitch = null
+  }
+}
+
+function resume() {
+  playState.value = 'playing'
+}
+
+function stop() {
+  playState.value = 'stopped'
+  if (pendingSwitch) {
+    clearTimeout(pendingSwitch)
+    pendingSwitch = null
+  }
+  groundingRef.value?.stop?.()
+  navigationRef.value?.stop?.()
+}
+
 function restart() {
+  playState.value = 'playing'
   if (currentScene.value === 'grounding') groundingRef.value?.start()
   else navigationRef.value?.start()
 }
 
 onMounted(() => {
-  switchScene('grounding')
+  play()
 })
 </script>
 
@@ -56,7 +89,27 @@ onMounted(() => {
         </button>
       </div>
       <div class="header-right">
-        <button class="restart-btn" @click="restart">↻ 重新开始</button>
+        <button
+          v-if="playState === 'playing'"
+          class="ctrl-btn pause-btn"
+          @click="pause"
+        >⏸ 暂停</button>
+        <button
+          v-else-if="playState === 'paused'"
+          class="ctrl-btn resume-btn"
+          @click="resume"
+        >▶ 继续</button>
+        <button
+          v-else
+          class="ctrl-btn play-btn"
+          @click="play"
+        >▶ 开始</button>
+        <button
+          class="ctrl-btn stop-btn"
+          :disabled="playState === 'stopped'"
+          @click="stop"
+        >⏹ 停止</button>
+        <button class="ctrl-btn restart-btn" @click="restart">↻ 重播</button>
       </div>
     </header>
 
@@ -119,8 +172,8 @@ onMounted(() => {
   border-color: #58a6ff;
   color: #e0e0e0;
 }
-.header-right { display: flex; align-items: center; }
-.restart-btn {
+.header-right { display: flex; align-items: center; gap: 6px; }
+.ctrl-btn {
   padding: 6px 14px;
   border: 1px solid #2a2e38;
   border-radius: 6px;
@@ -130,7 +183,14 @@ onMounted(() => {
   cursor: pointer;
   transition: all 0.2s ease;
 }
-.restart-btn:hover { border-color: #484f58; color: #e0e0e0; }
+.ctrl-btn:hover:not(:disabled) { border-color: #484f58; color: #e0e0e0; }
+.ctrl-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.play-btn, .resume-btn { border-color: #1a5c2a; color: #3fb950; }
+.play-btn:hover, .resume-btn:hover { border-color: #2ea043; }
+.pause-btn { border-color: #5c4a1a; color: #d29922; }
+.pause-btn:hover { border-color: #d29922; }
+.stop-btn { border-color: #5c1a1a; color: #f85149; }
+.stop-btn:hover:not(:disabled) { border-color: #f85149; }
 .app-main {
   flex: 1;
   overflow: hidden;

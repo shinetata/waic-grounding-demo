@@ -6,6 +6,7 @@ const props = withDefaults(defineProps<{
   label?: string
   color?: string
   delay?: number
+  queryIndex?: number
 }>(), {
   label: '',
   color: '#ef4444',
@@ -28,13 +29,23 @@ const style = computed(() => {
     '--box-color': props.color,
   }
 })
+
+const queryLabel = computed(() => {
+  if (props.queryIndex !== undefined) return `Q${props.queryIndex + 1}`
+  return ''
+})
 </script>
 
 <template>
   <div class="bbox-wrapper" :class="{ visible }" :style="style">
     <div class="bbox-border"></div>
-    <div v-if="label" class="bbox-label" :style="{ backgroundColor: color }">
-      {{ label }}
+    <div class="bbox-corner tl"></div>
+    <div class="bbox-corner tr"></div>
+    <div class="bbox-corner bl"></div>
+    <div class="bbox-corner br"></div>
+    <div v-if="label || queryLabel" class="bbox-label" :style="{ backgroundColor: color }">
+      <span v-if="queryLabel" class="label-prefix">{{ queryLabel }}</span>
+      <span v-if="label" class="label-text">{{ label }}</span>
     </div>
   </div>
 </template>
@@ -59,10 +70,24 @@ const style = computed(() => {
   animation: bbox-pulse 1.5s ease-in-out 2;
   box-shadow: 0 0 12px color-mix(in srgb, var(--box-color) 40%, transparent);
 }
+.bbox-corner {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-color: var(--box-color, #ef4444);
+  border-style: solid;
+}
+.bbox-corner.tl { top: -1px; left: -1px; border-width: 3px 0 0 3px; border-radius: 3px 0 0 0; }
+.bbox-corner.tr { top: -1px; right: -1px; border-width: 3px 3px 0 0; border-radius: 0 3px 0 0; }
+.bbox-corner.bl { bottom: -1px; left: -1px; border-width: 0 0 3px 3px; border-radius: 0 0 0 3px; }
+.bbox-corner.br { bottom: -1px; right: -1px; border-width: 0 3px 3px 0; border-radius: 0 0 3px 0; }
 .bbox-label {
   position: absolute;
   bottom: calc(100% + 4px);
   left: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
   padding: 2px 8px;
   font-size: 11px;
   font-weight: 600;
@@ -70,6 +95,19 @@ const style = computed(() => {
   border-radius: 4px;
   white-space: nowrap;
   max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  backdrop-filter: blur(4px);
+}
+.label-prefix {
+  padding: 0 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+.label-text {
   overflow: hidden;
   text-overflow: ellipsis;
 }

@@ -4,19 +4,23 @@ import ScreenshotView from '../components/ScreenshotView.vue'
 import ThoughtStream from '../components/ThoughtStream.vue'
 import PageMap from '../components/PageMap.vue'
 import SummaryCard from '../components/SummaryCard.vue'
+import SceneProgress from '../components/SceneProgress.vue'
+import EvidencePanel from '../components/EvidencePanel.vue'
 import type { Grounding } from '../components/ScreenshotView.vue'
 import type { ThoughtEntry } from '../components/ThoughtStream.vue'
+import type { EvidenceEntry } from '../components/EvidencePanel.vue'
 import type { PageInfo } from '../components/PageMap.vue'
 import { useWebSocket, type DemoEvent } from '../composables/useWebSocket'
 
 const emit = defineEmits<{ done: [] }>()
 
-const { events, running, connect } = useWebSocket()
+const { events, running, connect, disconnect } = useWebSocket()
 
 const currentStage = ref('overview')
 const currentImage = ref('/assets/pages/overview.png')
 const currentRect = ref({ x: 0, y: 0, w: 1, h: 1 })
 const showSummary = ref(false)
+let doneTimer: ReturnType<typeof setTimeout> | null = null
 
 const PAGE_TITLES: Record<string, string> = {
   'overview': '总览面板',
@@ -76,6 +80,34 @@ const thoughts = computed<ThoughtEntry[]>(() => {
     }))
 })
 
+const evidenceEntries = computed<EvidenceEntry[]>(() => {
+  const entries: EvidenceEntry[] = []
+  for (const evt of events.value) {
+    if (evt.type !== 'step') continue
+    if (evt.action_type) {
+      const parts = [`action: ${evt.action_type}`]
+      if (evt.action_target) parts.push(`target: ${JSON.stringify(evt.action_target)}`)
+      if (evt.action_reason) parts.push(`reason: ${evt.action_reason}`)
+      entries.push({ step: evt.step, type: 'action', raw: parts.join('\n'), stage: evt.stage })
+    }
+    if (evt.finding) {
+      entries.push({ step: evt.step, type: 'reasoning', raw: evt.finding, stage: evt.stage })
+    }
+  }
+  return entries
+})
+
+const navProgressSteps = computed(() => {
+  const pageIds = Object.keys(PAGE_TITLES)
+  return pageIds.map(id => ({
+    label: PAGE_TITLES[id],
+    status: id === currentStage.value ? 'active'
+      : visited.value.has(id) ? 'done'
+      : skippedPages.value.has(id) ? 'done'
+      : 'idle',
+  })) as Array<{ label: string; status: 'idle' | 'active' | 'done' }>
+})
+
 const summaryData = computed(() => {
   const end = events.value.find((e: DemoEvent) => e.type === 'scene_end')
   if (!end) return null
@@ -114,11 +146,12 @@ watch(events, (evts) => {
 
   if (latest.type === 'scene_end') {
     showSummary.value = true
-    setTimeout(() => emit('done'), 8000)
+    doneTimer = setTimeout(() => emit('done'), 8000)
   }
 })
 
 function start() {
+  if (doneTimer) { clearTimeout(doneTimer); doneTimer = null }
   showSummary.value = false
   visited.value = new Set(['overview'])
   skippedPages.value = new Map()
@@ -131,7 +164,14 @@ function start() {
   connect('navigation')
 }
 
-defineExpose({ start })
+function stop() {
+  if (doneTimer) { clearTimeout(doneTimer); doneTimer = null }
+  disconnect()
+  showSummary.value = false
+  events.value = []
+}
+
+defineExpose({ start, stop })
 </script>
 
 <template>
@@ -152,7 +192,9 @@ defineExpose({ start })
         <div class="task-label">审计任务</div>
         <div class="task-text">评估 NexaCloud 管理后台的安全风险</div>
       </div>
+      <SceneProgress :steps="navProgressSteps" />
       <ThoughtStream :entries="thoughts" title="审计过程" />
+      <EvidencePanel :entries="evidenceEntries" />
       <SummaryCard
         v-if="showSummary && summaryData"
         scene="navigation"
