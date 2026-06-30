@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1120">
+<title>NexaCloud Admin - Logs</title>
+<link rel="stylesheet" href="admin-shared.css">
+<style>
+  .log-entry { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 11px; }
+  .log-time { color: #6b7280; min-width: 140px; }
+  .log-level-info { color: #3b82f6; font-weight: 600; }
+  .log-level-warn { color: #f59e0b; font-weight: 600; }
+  .log-level-error { color: #ef4444; font-weight: 600; }
+  .log-ip { color: #8b5cf6; }
+  .log-action { color: #374151; }
+  .suspicious-row { background: #fef2f2; }
+  .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; }
+  .filter-btn { padding: 4px 12px; border: 1px solid #e5e7eb; border-radius: 4px; font-size: 11px; background: #fff; color: #374151; cursor: pointer; }
+  .filter-btn.active { background: #6c63ff; color: #fff; border-color: #6c63ff; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo"><span>Nexa</span>Cloud</div>
+  <nav>
+    <a href="#"><span class="icon">📊</span> Overview</a>
+    <a href="#"><span class="icon">👤</span> Users</a>
+    <a href="#"><span class="icon">🔐</span> Permissions</a>
+    <a href="#"><span class="icon">🔑</span> API Keys</a>
+    <a href="#"><span class="icon">📈</span> Analytics</a>
+    <a class="active" href="#"><span class="icon">📋</span> Logs <span class="badge" style="background:#f59e0b;">!</span></a>
+  </nav>
+</div>
+<div class="main">
+  <div class="topbar">
+    <h1>Audit Logs</h1>
+    <div class="user"><div class="avatar">JW</div> admin@nexacloud.io</div>
+  </div>
+  <div class="content">
+    <div class="filter-bar">
+      <span class="filter-btn active">All</span>
+      <span class="filter-btn">Auth</span>
+      <span class="filter-btn">Admin</span>
+      <span class="filter-btn">API</span>
+      <span class="filter-btn">System</span>
+    </div>
+
+    <div class="card" id="audit-log-card">
+      <div class="card-title" style="display:flex;justify-content:space-between;">
+        Recent Audit Events
+        <span style="font-size:11px;color:#9ca3af;">Last 48 hours · 847 events</span>
+      </div>
+      <table class="log-entry" id="audit-log-table">
+        <thead><tr><th>Timestamp</th><th>Level</th><th>User</th><th>IP Address</th><th>Action</th><th>Details</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="log-time">Jun 15, 14:42:18</td>
+            <td class="log-level-info">INFO</td>
+            <td>james@nexacloud.io</td>
+            <td class="log-ip">10.0.1.15</td>
+            <td class="log-action">LOGIN</td>
+            <td>Successful login via SSO</td>
+          </tr>
+          <tr>
+            <td class="log-time">Jun 15, 14:30:05</td>
+            <td class="log-level-info">INFO</td>
+            <td>sarah.c@nexacloud.io</td>
+            <td class="log-ip">10.0.1.22</td>
+            <td class="log-action">USER.UPDATE</td>
+            <td>Updated user profile for mike.j</td>
+          </tr>
+          <tr>
+            <td class="log-time">Jun 15, 13:15:22</td>
+            <td class="log-level-info">INFO</td>
+            <td>system</td>
+            <td class="log-ip">10.0.0.1</td>
+            <td class="log-action">BACKUP</td>
+            <td>Daily backup completed successfully</td>
+          </tr>
+          <tr>
+            <td class="log-time">Jun 15, 12:00:00</td>
+            <td class="log-level-info">INFO</td>
+            <td>system</td>
+            <td class="log-ip">10.0.0.1</td>
+            <td class="log-action">CERT.RENEW</td>
+            <td>SSL certificate renewed for api.nexacloud.io</td>
+          </tr>
+          <tr>
+            <td class="log-time">Jun 15, 10:45:33</td>
+            <td class="log-level-info">INFO</td>
+            <td>mike.j@company.com</td>
+            <td class="log-ip">192.168.5.10</td>
+            <td class="log-action">CONTENT.CREATE</td>
+            <td>Created new article "Q2 Product Update"</td>
+          </tr>
+          <tr>
+            <td class="log-time">Jun 15, 09:30:11</td>
+            <td class="log-level-info">INFO</td>
+            <td>lisa.p@company.com</td>
+            <td class="log-ip">192.168.5.15</td>
+            <td class="log-action">LOGIN</td>
+            <td>Successful login via password</td>
+          </tr>
+          <tr id="log-suspicious-1" class="suspicious-row">
+            <td class="log-time">Jun 15, 03:42:55</td>
+            <td class="log-level-warn">WARN</td>
+            <td>external_api_bot</td>
+            <td class="log-ip" style="color:#ef4444;font-weight:600;">45.227.198.XX</td>
+            <td class="log-action" style="color:#ef4444;">LOGIN</td>
+            <td style="color:#ef4444;">Login from unrecognized IP (Bogota, CO) · using prod-master-key</td>
+          </tr>
+          <tr id="log-suspicious-2" class="suspicious-row">
+            <td class="log-time">Jun 15, 03:43:12</td>
+            <td class="log-level-warn">WARN</td>
+            <td>external_api_bot</td>
+            <td class="log-ip" style="color:#ef4444;font-weight:600;">45.227.198.XX</td>
+            <td class="log-action" style="color:#ef4444;">PERM.MODIFY</td>
+            <td style="color:#ef4444;">Modified guest role: added admin.write, admin.delete</td>
+          </tr>
+          <tr id="log-suspicious-3" class="suspicious-row">
+            <td class="log-time">Jun 15, 03:44:30</td>
+            <td class="log-level-error">ERROR</td>
+            <td>external_api_bot</td>
+            <td class="log-ip" style="color:#ef4444;font-weight:600;">45.227.198.XX</td>
+            <td class="log-action" style="color:#ef4444;">DATA.EXPORT</td>
+            <td style="color:#ef4444;">Bulk export of user PII data (2,481 records) · 14.2 MB</td>
+          </tr>
+          <tr>
+            <td class="log-time">Jun 15, 02:00:00</td>
+            <td class="log-level-info">INFO</td>
+            <td>system</td>
+            <td class="log-ip">10.0.0.1</td>
+            <td class="log-action">MAINT</td>
+            <td>Scheduled maintenance window started</td>
+          </tr>
+          <tr>
+            <td class="log-time">Jun 14, 23:15:44</td>
+            <td class="log-level-info">INFO</td>
+            <td>sarah.c@nexacloud.io</td>
+            <td class="log-ip">10.0.1.22</td>
+            <td class="log-action">LOGOUT</td>
+            <td>Session ended</td>
+          </tr>
+          <tr>
+            <td class="log-time">Jun 14, 22:15:03</td>
+            <td class="log-level-warn">WARN</td>
+            <td>system</td>
+            <td class="log-ip">10.0.0.1</td>
+            <td class="log-action">ALERT</td>
+            <td>Role escalation alert triggered for guest role</td>
+          </tr>
+          <tr>
+            <td class="log-time">Jun 14, 18:30:22</td>
+            <td class="log-level-info">INFO</td>
+            <td>tom.g@partner.io</td>
+            <td class="log-ip">203.0.113.50</td>
+            <td class="log-action">API.CALL</td>
+            <td>GET /api/v2/content - 200 OK</td>
+          </tr>
+          <tr>
+            <td class="log-time">Jun 14, 16:45:10</td>
+            <td class="log-level-info">INFO</td>
+            <td>james@nexacloud.io</td>
+            <td class="log-ip">10.0.1.15</td>
+            <td class="log-action">SETTINGS.UPDATE</td>
+            <td>Updated rate limiting configuration</td>
+          </tr>
+          <tr>
+            <td class="log-time">Jun 14, 15:20:00</td>
+            <td class="log-level-info">INFO</td>
+            <td>system</td>
+            <td class="log-ip">10.0.0.1</td>
+            <td class="log-action">DEPLOY</td>
+            <td>Application version 3.2.1 deployed</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</body>
+</html>

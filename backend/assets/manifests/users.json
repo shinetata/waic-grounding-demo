@@ -1,0 +1,26 @@
+{
+  "stage": "users",
+  "image": "users.png",
+  "width": 1120,
+  "height": 900,
+  "elements": [
+    {
+      "id": "user-table",
+      "rect": {
+        "x": 0.2402,
+        "y": 0.2622,
+        "w": 0.7161,
+        "h": 0.6544
+      }
+    },
+    {
+      "id": "user-guest-admin",
+      "rect": {
+        "x": 0.2402,
+        "y": 0.505,
+        "w": 0.7161,
+        "h": 0.0411
+      }
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1120">
+<title>NexaCloud Admin - Users</title>
+<link rel="stylesheet" href="admin-shared.css">
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo"><span>Nexa</span>Cloud</div>
+  <nav>
+    <a href="#"><span class="icon">📊</span> Overview</a>
+    <a class="active" href="#"><span class="icon">👤</span> Users <span class="badge">248</span></a>
+    <a href="#"><span class="icon">🔐</span> Permissions</a>
+    <a href="#"><span class="icon">🔑</span> API Keys</a>
+    <a href="#"><span class="icon">📈</span> Analytics</a>
+    <a href="#"><span class="icon">📋</span> Logs</a>
+  </nav>
+</div>
+<div class="main">
+  <div class="topbar">
+    <h1>User Management</h1>
+    <div class="user"><div class="avatar">JW</div> admin@nexacloud.io</div>
+  </div>
+  <div class="content">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="label">Total Users</div><div class="value">2,481</div></div>
+      <div class="stat-card"><div class="label">Admins</div><div class="value">5</div></div>
+      <div class="stat-card"><div class="label">Active (7d)</div><div class="value">1,892</div></div>
+      <div class="stat-card"><div class="label">Suspended</div><div class="value" style="color:#ef4444;">12</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
+        User List
+        <span style="font-size:11px;color:#9ca3af;">Showing 1-20 of 2,481</span>
+      </div>
+      <table id="user-table">
+        <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Status</th><th>Last Login</th><th>Created</th></tr></thead>
+        <tbody>
+          <tr><td>James Wilson</td><td>james@nexacloud.io</td><td><span class="badge-danger">Super Admin</span></td><td><span class="badge-ok">Active</span></td><td>Today, 14:42</td><td>Jan 2024</td></tr>
+          <tr><td>Sarah Chen</td><td>sarah.c@nexacloud.io</td><td><span class="badge-danger">Admin</span></td><td><span class="badge-ok">Active</span></td><td>Today, 13:10</td><td>Feb 2024</td></tr>
+          <tr><td>Mike Johnson</td><td>mike.j@company.com</td><td><span class="badge-info">Editor</span></td><td><span class="badge-ok">Active</span></td><td>Today, 11:30</td><td>Mar 2024</td></tr>
+          <tr><td>Lisa Park</td><td>lisa.p@company.com</td><td><span class="badge-info">Editor</span></td><td><span class="badge-ok">Active</span></td><td>Yesterday</td><td>Apr 2024</td></tr>
+          <tr><td>Tom Garcia</td><td>tom.g@partner.io</td><td><span class="badge-ok">Viewer</span></td><td><span class="badge-ok">Active</span></td><td>Jun 14</td><td>May 2024</td></tr>
+          <tr id="user-guest-admin"><td>external_api_bot</td><td>bot@external-service.net</td><td><span class="badge-danger">Admin</span></td><td><span class="badge-ok">Active</span></td><td>Today, 03:42</td><td>Jun 2024</td></tr>
+          <tr><td>David Lee</td><td>david.l@company.com</td><td><span class="badge-ok">Viewer</span></td><td><span class="badge-ok">Active</span></td><td>Jun 13</td><td>Jun 2024</td></tr>
+          <tr><td>Emily Wang</td><td>emily.w@company.com</td><td><span class="badge-info">Editor</span></td><td><span class="badge-ok">Active</span></td><td>Jun 12</td><td>Jul 2024</td></tr>
+          <tr><td>Alex Kim</td><td>alex.k@contractor.co</td><td><span class="badge-ok">Viewer</span></td><td><span class="badge-warn">Inactive</span></td><td>May 28</td><td>Aug 2024</td></tr>
+          <tr><td>Rachel Moore</td><td>rachel.m@company.com</td><td><span class="badge-info">Editor</span></td><td><span class="badge-ok">Active</span></td><td>Jun 14</td><td>Sep 2024</td></tr>
+          <tr><td>Chris Taylor</td><td>chris.t@company.com</td><td><span class="badge-ok">Viewer</span></td><td><span class="badge-ok">Active</span></td><td>Jun 13</td><td>Oct 2024</td></tr>
+          <tr><td>Nina Patel</td><td>nina.p@company.com</td><td><span class="badge-ok">Viewer</span></td><td><span class="badge-ok">Active</span></td><td>Jun 10</td><td>Nov 2024</td></tr>
+          <tr><td>Sam Brown</td><td>sam.b@partner.io</td><td><span class="badge-ok">Guest</span></td><td><span class="badge-ok">Active</span></td><td>Jun 14</td><td>Dec 2024</td></tr>
+          <tr><td>Julie Fox</td><td>julie.f@company.com</td><td><span class="badge-info">Editor</span></td><td><span class="badge-ok">Active</span></td><td>Jun 11</td><td>Jan 2025</td></tr>
+          <tr><td>Omar Hassan</td><td>omar.h@company.com</td><td><span class="badge-ok">Viewer</span></td><td><span class="badge-warn">Inactive</span></td><td>May 20</td><td>Feb 2025</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</body>
+</html>

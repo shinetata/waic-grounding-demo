@@ -1,0 +1,44 @@
+{
+  "stage": "analytics",
+  "image": "analytics.png",
+  "width": 1120,
+  "height": 900,
+  "elements": [
+    {
+      "id": "traffic-chart",
+      "rect": {
+        "x": 0.2214,
+        "y": 0.2211,
+        "w": 0.3696,
+        "h": 0.2811
+      }
+    },
+    {
+      "id": "geo-chart",
+      "rect": {
+        "x": 0.6054,
+        "y": 0.2211,
+        "w": 0.3696,
+        "h": 0.2811
+      }
+    },
+    {
+      "id": "device-chart",
+      "rect": {
+        "x": 0.2214,
+        "y": 0.5378,
+        "w": 0.3696,
+        "h": 0.3244
+      }
+    },
+    {
+      "id": "endpoint-chart",
+      "rect": {
+        "x": 0.6054,
+        "y": 0.5378,
+        "w": 0.3696,
+        "h": 0.3244
+      }
+    }
+  ]
+}

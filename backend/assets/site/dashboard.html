@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1120">
+<title>CloudOps Monitor</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: #0f1117; color: #e0e0e0; width: 1120px; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; background: #161a22; border-bottom: 1px solid #2a2e38; }
+  .topbar .logo { font-size: 13px; font-weight: 700; color: #58a6ff; }
+  .topbar .time { font-size: 11px; color: #8b949e; }
+  .topbar .alerts { background: #da3633; color: #fff; border-radius: 10px; padding: 1px 7px; font-size: 10px; font-weight: 600; }
+
+  .main-grid { display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: auto auto auto; gap: 8px; padding: 8px 12px; }
+
+  .panel { background: #161a22; border: 1px solid #2a2e38; border-radius: 6px; padding: 8px 10px; }
+  .panel-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: #8b949e; margin-bottom: 4px; }
+  .panel-value { font-size: 18px; font-weight: 700; line-height: 1.2; }
+  .panel-sub { font-size: 9px; color: #8b949e; margin-top: 2px; }
+  .chart-area { height: 45px; margin: 4px 0 2px; }
+  .footnote { font-size: 8px; color: #484f58; margin-top: 2px; }
+  .threshold-label { font-size: 8px; fill: #da3633; }
+
+  /* Row 1: 6 metric cards */
+  .p-cpu { grid-column: 1; }
+  .p-mem { grid-column: 2; }
+  .p-net { grid-column: 3; }
+  .p-err { grid-column: 4; }
+  .p-lat { grid-column: 5; }
+  .p-dep { grid-column: 6; }
+
+  /* Row 2: wide latency chart + deployment timeline */
+  .p-lat-wide { grid-column: 1 / 4; }
+  .p-dep-wide { grid-column: 4 / 7; }
+
+  /* Row 3: service table full width */
+  .p-table { grid-column: 1 / 7; }
+
+  .timeline-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+  .timeline-event { text-align: center; }
+  .timeline-event .tag { border-radius: 3px; padding: 1px 6px; font-size: 9px; font-weight: 600; color: #fff; }
+  .timeline-event .tag.green { background: #238636; }
+  .timeline-event .tag.red { background: #da3633; }
+  .timeline-event .ttime { font-size: 8px; color: #8b949e; margin-top: 1px; }
+  .timeline-event .tsvc { font-size: 7px; color: #484f58; }
+  .timeline-line { flex: 1; height: 1px; background: #2a2e38; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 10px; }
+  th { text-align: left; padding: 4px 6px; background: #1c2028; color: #8b949e; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; font-size: 8px; border-bottom: 1px solid #2a2e38; }
+  td { padding: 3px 6px; border-bottom: 1px solid #1c2028; white-space: nowrap; }
+  .status-ok { color: #3fb950; }
+  .status-warn { color: #d29922; }
+  .status-crit { color: #f85149; }
+  .table-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .table-header h3 { font-size: 11px; font-weight: 600; }
+  .table-header .count { font-size: 9px; color: #8b949e; }
+  svg text { font-family: 'Inter', -apple-system, sans-serif; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">CloudOps Monitor</div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span class="time">2025-06-15 14:42 UTC</span>
+    <span id="alert-badge" class="alerts">3 Alerts</span>
+  </div>
+</div>
+
+<div class="main-grid">
+  <!-- Row 1: 6 compact metric cards -->
+  <div class="panel p-cpu" id="cpu-panel">
+    <div class="panel-title">CPU Usage</div>
+    <div class="chart-area">
+      <svg width="100%" height="45" viewBox="0 0 160 45">
+        <polyline points="0,35 15,32 30,28 45,25 60,20 75,16 90,12 105,10 120,8 135,6 145,5 160,4" fill="none" stroke="#2ea043" stroke-width="1" opacity="0.4"/>
+        <polyline points="0,38 15,35 30,30 45,24 60,18 75,14 90,10 105,8 120,6 135,5 145,4 160,3" fill="none" stroke="#f0883e" stroke-width="1" opacity="0.4"/>
+        <polyline id="cpu-alpha-line" points="0,40 15,36 30,32 45,26 60,20 75,15 90,10 105,7 120,5 135,4 145,3 160,3" fill="none" stroke="#f85149" stroke-width="1.5"/>
+        <line x1="0" y1="8" x2="160" y2="8" stroke="#da3633" stroke-width="0.5" stroke-dasharray="3,2"/>
+        <text x="162" y="10" class="threshold-label">80%</text>
+      </svg>
+    </div>
+    <div id="cpu-alpha-value" class="panel-value" style="color:#f85149;">87%</div>
+    <div class="panel-sub">service-alpha · Peak 14:38</div>
+    <div class="footnote" id="cpu-footnote">Avg 3 replicas · excl idle</div>
+  </div>
+
+  <div class="panel p-mem" id="memory-panel">
+    <div class="panel-title">Memory</div>
+    <div class="chart-area">
+      <svg width="100%" height="45" viewBox="0 0 160 45">
+        <polyline points="0,20 20,19 40,18 60,17 80,17 100,16 120,15 140,15 160,14" fill="none" stroke="#58a6ff" stroke-width="1.5"/>
+      </svg>
+    </div>
+    <div class="panel-value" style="color:#58a6ff;">72%</div>
+    <div class="panel-sub">service-beta · Stable</div>
+  </div>
+
+  <div class="panel p-net" id="network-panel">
+    <div class="panel-title">Network I/O</div>
+    <div class="chart-area">
+      <svg width="100%" height="45" viewBox="0 0 160 45">
+        <polyline points="0,25 20,23 40,26 60,22 80,25 100,23 120,25 140,24 160,25" fill="none" stroke="#a371f7" stroke-width="1.5"/>
+      </svg>
+    </div>
+    <div class="panel-value" style="color:#a371f7;">1.2 Gbps</div>
+    <div class="panel-sub">Inbound · Normal</div>
+  </div>
+
+  <div class="panel p-err" id="error-panel">
+    <div class="panel-title">Error Rate (5xx)</div>
+    <div class="chart-area">
+      <svg width="100%" height="45" viewBox="0 0 160 45">
+        <polyline points="0,40 20,40 40,39 60,40 80,39 100,40 120,39 130,20 140,36 160,39" fill="none" stroke="#f85149" stroke-width="1.5"/>
+        <circle id="error-spike" cx="130" cy="20" r="2.5" fill="#f85149"/>
+      </svg>
+    </div>
+    <div class="panel-value" style="color:#3fb950;">0.02%</div>
+    <div class="panel-sub">spike 0.8% @14:20</div>
+  </div>
+
+  <div class="panel p-lat" id="latency-mini">
+    <div class="panel-title">P99 Latency</div>
+    <div class="chart-area">
+      <svg width="100%" height="45" viewBox="0 0 160 45">
+        <polyline points="0,38 20,37 40,38 60,37 80,36 100,35 110,30 120,8 125,14 135,34 150,37 160,38" fill="none" stroke="#d29922" stroke-width="1.5"/>
+        <circle id="latency-spike-mini" cx="120" cy="8" r="2.5" fill="#d29922"/>
+      </svg>
+    </div>
+    <div class="panel-value" style="color:#d29922;">892ms</div>
+    <div class="panel-sub">peak @14:15 · gamma</div>
+  </div>
+
+  <div class="panel p-dep" id="deploy-mini">
+    <div class="panel-title">Deployments</div>
+    <div class="chart-area" style="display:flex;align-items:center;justify-content:center;gap:4px;">
+      <span class="tag green" style="background:#238636;color:#fff;border-radius:3px;padding:1px 5px;font-size:8px;font-weight:600;">v2.3.1</span>
+      <span class="tag green" style="background:#238636;color:#fff;border-radius:3px;padding:1px 5px;font-size:8px;font-weight:600;">v2.3.2</span>
+      <span class="tag red" style="background:#da3633;color:#fff;border-radius:3px;padding:1px 5px;font-size:8px;font-weight:600;">v2.4.0</span>
+      <span class="tag red" style="background:#da3633;color:#fff;border-radius:3px;padding:1px 5px;font-size:8px;font-weight:600;">↩ rollback</span>
+    </div>
+    <div class="panel-value" style="font-size:14px;">4 today</div>
+    <div class="panel-sub">1 rollback · gamma</div>
+  </div>
+
+  <!-- Row 2: Detailed latency chart + Deployment timeline -->
+  <div class="panel p-lat-wide" id="latency-panel">
+    <div class="panel-title">P99 Latency — 24h Detail</div>
+    <div class="chart-area" style="height:70px;">
+      <svg width="100%" height="70" viewBox="0 0 340 70">
+        <text x="0" y="68" font-size="7" fill="#484f58">00:00</text>
+        <text x="50" y="68" font-size="7" fill="#484f58">04:00</text>
+        <text x="100" y="68" font-size="7" fill="#484f58">08:00</text>
+        <text x="150" y="68" font-size="7" fill="#484f58">12:00</text>
+        <text x="200" y="68" font-size="7" fill="#484f58">13:00</text>
+        <text x="230" y="68" font-size="7" fill="#484f58">14:00</text>
+        <text x="250" y="68" font-size="7" fill="#484f58">14:15</text>
+        <text x="290" y="68" font-size="7" fill="#484f58">15:00</text>
+        <text x="325" y="68" font-size="7" fill="#484f58">Now</text>
+        <line x1="0" y1="55" x2="340" y2="55" stroke="#1c2028" stroke-width="0.5"/>
+        <line x1="0" y1="35" x2="340" y2="35" stroke="#1c2028" stroke-width="0.5"/>
+        <line x1="0" y1="15" x2="340" y2="15" stroke="#da3633" stroke-width="0.5" stroke-dasharray="3,2"/>
+        <text x="342" y="17" font-size="7" fill="#da3633">500ms</text>
+        <polyline points="0,52 30,51 60,52 90,50 120,52 150,51 180,50 200,48 220,42 240,8 248,16 260,45 280,50 300,52 320,51 340,52" fill="none" stroke="#d29922" stroke-width="1.5"/>
+        <circle id="latency-spike" cx="240" cy="8" r="3" fill="#d29922" stroke="#0f1117" stroke-width="1.5"/>
+        <text id="latency-spike-label" x="240" y="5" font-size="8" fill="#d29922" text-anchor="middle" font-weight="600">892ms</text>
+      </svg>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:8px;">
+      <span class="panel-value" style="color:#d29922;font-size:16px;">892ms</span>
+      <span class="panel-sub">peak @14:15 · service-gamma · SLA breach 1m42s</span>
+    </div>
+    <div class="footnote" id="latency-footnote">Edge proxy · p50=45ms p95=120ms p99=892ms</div>
+  </div>
+
+  <div class="panel p-dep-wide" id="deploy-panel">
+    <div class="panel-title">Deployment Timeline</div>
+    <div class="timeline-row">
+      <div class="timeline-event" id="deploy-v231">
+        <div class="tag green">v2.3.1</div>
+        <div class="ttime">10:30</div>
+        <div class="tsvc">gateway</div>
+      </div>
+      <div class="timeline-line"></div>
+      <div class="timeline-event" id="deploy-v232">
+        <div class="tag green">v2.3.2</div>
+        <div class="ttime">13:45</div>
+        <div class="tsvc">auth-svc</div>
+      </div>
+      <div class="timeline-line"></div>
+      <div class="timeline-event" id="deploy-v240">
+        <div class="tag red">v2.4.0</div>
+        <div class="ttime">14:12</div>
+        <div class="tsvc">svc-gamma</div>
+      </div>
+      <div class="timeline-line"></div>
+      <div class="timeline-event" id="deploy-v240-rb">
+        <div class="tag red">rollback</div>
+        <div class="ttime">14:55</div>
+        <div class="tsvc">svc-gamma</div>
+      </div>
+    </div>
+    <div class="footnote" id="deploy-footnote" style="margin-top:6px;">v2.4.0 → service-gamma @14:12 · rolled back @14:55 after latency alert</div>
+
+    <div style="margin-top:8px;">
+      <div class="panel-title">Incident Correlation</div>
+      <table style="font-size:9px;">
+        <tr><td style="color:#8b949e;">14:12</td><td>v2.4.0 deployed to <b style="color:#d29922;">service-gamma</b></td></tr>
+        <tr><td style="color:#8b949e;">14:15</td><td>P99 latency spike <b style="color:#f85149;">892ms</b> (threshold 500ms)</td></tr>
+        <tr><td style="color:#8b949e;">14:20</td><td>5xx error rate <b style="color:#f85149;">0.8%</b> spike detected</td></tr>
+        <tr><td style="color:#8b949e;">14:55</td><td>Rollback initiated · latency normalized</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Row 3: Compact service table -->
+  <div class="panel p-table">
+    <div class="table-header">
+      <h3 id="service-table-title">Service Health</h3>
+      <span class="count">22 services · 3 warn · 1 crit</span>
+    </div>
+    <table id="service-table">
+      <thead>
+        <tr><th>Service</th><th>Status</th><th>CPU%</th><th>Mem%</th><th>P99ms</th><th>Err/m</th><th>Repl</th><th>Deploy</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>api-gateway</td><td class="status-ok">● OK</td><td>34</td><td>45</td><td>28</td><td>0</td><td>4/4</td><td>10:30</td></tr>
+        <tr><td>auth-service</td><td class="status-ok">● OK</td><td>22</td><td>38</td><td>15</td><td>0</td><td>3/3</td><td>13:45</td></tr>
+        <tr><td>order-service</td><td class="status-ok">● OK</td><td>41</td><td>58</td><td>45</td><td>0.2</td><td>5/5</td><td>Jun14</td></tr>
+        <tr><td>search-engine</td><td class="status-warn">● Warn</td><td>62</td><td>71</td><td>180</td><td>0.5</td><td>4/4</td><td>Jun14</td></tr>
+        <tr><td>cache-layer</td><td class="status-ok">● OK</td><td>8</td><td>82</td><td>2</td><td>0</td><td>6/6</td><td>Jun08</td></tr>
+        <tr id="svc-alpha"><td><b>service-alpha</b></td><td class="status-crit">● Crit</td><td style="color:#f85149;font-weight:700;">87</td><td>68</td><td>120</td><td>2.1</td><td>3/3</td><td>Jun14</td></tr>
+        <tr><td>service-beta</td><td class="status-warn">● Warn</td><td>55</td><td>72</td><td>85</td><td>0.3</td><td>3/3</td><td>Jun13</td></tr>
+        <tr id="svc-gamma"><td><b>service-gamma</b></td><td class="status-crit">● Crit</td><td>48</td><td>55</td><td style="color:#d29922;font-weight:700;">892</td><td style="color:#f85149;">4.8</td><td>3/3</td><td style="color:#da3633;">14:12</td></tr>
+        <tr><td>ml-inference</td><td class="status-ok">● OK</td><td>72</td><td>80</td><td>250</td><td>0.2</td><td>2/2</td><td>Jun14</td></tr>
+        <tr><td>data-pipeline</td><td class="status-ok">● OK</td><td>40</td><td>60</td><td>350</td><td>0.1</td><td>2/2</td><td>Jun13</td></tr>
+        <tr><td>notification</td><td class="status-ok">● OK</td><td>12</td><td>22</td><td>8</td><td>0</td><td>2/2</td><td>Jun11</td></tr>
+        <tr><td>scheduler</td><td class="status-ok">● OK</td><td>30</td><td>40</td><td>50</td><td>0.1</td><td>2/2</td><td>Jun12</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</body>
+</html>

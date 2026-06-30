@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1120">
+<title>NexaCloud Admin - Permissions</title>
+<link rel="stylesheet" href="admin-shared.css">
+<style>
+  .perm-matrix td, .perm-matrix th { text-align: center; padding: 8px 6px; font-size: 12px; }
+  .perm-matrix td:first-child, .perm-matrix th:first-child { text-align: left; font-weight: 600; padding-left: 12px; }
+  .perm-check { color: #16a34a; font-weight: 700; font-size: 14px; }
+  .perm-deny { color: #d1d5db; font-size: 14px; }
+  .perm-danger { color: #ef4444; font-weight: 700; font-size: 14px; }
+  .role-header { font-size: 11px; font-weight: 700; }
+  tr.highlight-row { background: #fef2f2; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo"><span>Nexa</span>Cloud</div>
+  <nav>
+    <a href="#"><span class="icon">📊</span> Overview</a>
+    <a href="#"><span class="icon">👤</span> Users</a>
+    <a class="active" href="#"><span class="icon">🔐</span> Permissions</a>
+    <a href="#"><span class="icon">🔑</span> API Keys</a>
+    <a href="#"><span class="icon">📈</span> Analytics</a>
+    <a href="#"><span class="icon">📋</span> Logs</a>
+  </nav>
+</div>
+<div class="main">
+  <div class="topbar">
+    <h1>Role & Permission Matrix</h1>
+    <div class="user"><div class="avatar">JW</div> admin@nexacloud.io</div>
+  </div>
+  <div class="content">
+    <div class="card">
+      <div class="card-title">Active Roles</div>
+      <table>
+        <thead><tr><th>Role</th><th>Users</th><th>Description</th><th>Modified</th></tr></thead>
+        <tbody>
+          <tr><td>Super Admin</td><td>1</td><td>Full system access, cannot be modified</td><td>System</td></tr>
+          <tr><td>Admin</td><td>4</td><td>Administrative access to all modules</td><td>Jan 2024</td></tr>
+          <tr><td>Editor</td><td>45</td><td>Create and edit content, limited settings</td><td>Mar 2024</td></tr>
+          <tr><td>Viewer</td><td>1,890</td><td>Read-only access to assigned resources</td><td>Mar 2024</td></tr>
+          <tr><td>Guest</td><td>541</td><td>Temporary access, should be restricted</td><td>Jun 2024</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" id="permission-matrix-card">
+      <div class="card-title">Permission Matrix</div>
+      <table class="perm-matrix" id="perm-matrix">
+        <thead>
+          <tr>
+            <th style="width:180px;">Permission</th>
+            <th class="role-header">Super Admin</th>
+            <th class="role-header">Admin</th>
+            <th class="role-header">Editor</th>
+            <th class="role-header">Viewer</th>
+            <th class="role-header">Guest</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>user.read</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-check">✓</td></tr>
+          <tr><td>user.create</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-deny">—</td><td class="perm-deny">—</td><td class="perm-deny">—</td></tr>
+          <tr><td>user.update</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-deny">—</td><td class="perm-deny">—</td><td class="perm-deny">—</td></tr>
+          <tr><td>user.delete</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-deny">—</td><td class="perm-deny">—</td><td class="perm-deny">—</td></tr>
+          <tr><td>content.read</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-check">✓</td></tr>
+          <tr><td>content.write</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-deny">—</td><td class="perm-deny">—</td></tr>
+          <tr><td>content.delete</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-deny">—</td><td class="perm-deny">—</td><td class="perm-deny">—</td></tr>
+          <tr><td>settings.read</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-deny">—</td><td class="perm-deny">—</td></tr>
+          <tr><td>settings.write</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-deny">—</td><td class="perm-deny">—</td><td class="perm-deny">—</td></tr>
+          <tr><td>api.manage</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-deny">—</td><td class="perm-deny">—</td><td class="perm-deny">—</td></tr>
+          <tr><td>billing.read</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-deny">—</td><td class="perm-deny">—</td><td class="perm-deny">—</td></tr>
+          <tr><td>billing.write</td><td class="perm-check">✓</td><td class="perm-deny">—</td><td class="perm-deny">—</td><td class="perm-deny">—</td><td class="perm-deny">—</td></tr>
+          <tr><td>logs.read</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-deny">—</td><td class="perm-deny">—</td></tr>
+          <tr id="perm-guest-admin-write" class="highlight-row">
+            <td>admin.write</td>
+            <td class="perm-check">✓</td>
+            <td class="perm-check">✓</td>
+            <td class="perm-deny">—</td>
+            <td class="perm-deny">—</td>
+            <td class="perm-danger">✓</td>
+          </tr>
+          <tr id="perm-guest-admin-delete" class="highlight-row">
+            <td>admin.delete</td>
+            <td class="perm-check">✓</td>
+            <td class="perm-check">✓</td>
+            <td class="perm-deny">—</td>
+            <td class="perm-deny">—</td>
+            <td class="perm-danger">✓</td>
+          </tr>
+          <tr><td>audit.read</td><td class="perm-check">✓</td><td class="perm-check">✓</td><td class="perm-deny">—</td><td class="perm-deny">—</td><td class="perm-deny">—</td></tr>
+          <tr><td>audit.export</td><td class="perm-check">✓</td><td class="perm-deny">—</td><td class="perm-deny">—</td><td class="perm-deny">—</td><td class="perm-deny">—</td></tr>
+          <tr><td>system.config</td><td class="perm-check">✓</td><td class="perm-deny">—</td><td class="perm-deny">—</td><td class="perm-deny">—</td><td class="perm-deny">—</td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:12px;font-size:11px;color:#9ca3af;" id="perm-footnote">
+        Last modified: Jun 14, 2025 22:15 by external_api_bot · <span style="color:#ef4444;">⚠ Guest role permissions were modified outside normal approval workflow</span>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

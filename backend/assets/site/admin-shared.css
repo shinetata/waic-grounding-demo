@@ -1,0 +1,33 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f6f8; color: #1a1a2e; width: 1120px; display: flex; min-height: 900px; }
+.sidebar { width: 220px; background: #1a1a2e; color: #c0c5d0; padding: 20px 0; flex-shrink: 0; }
+.sidebar .logo { padding: 0 20px 24px; font-size: 16px; font-weight: 700; color: #fff; }
+.sidebar .logo span { color: #6c63ff; }
+.sidebar nav a { display: flex; align-items: center; gap: 10px; padding: 10px 20px; font-size: 13px; color: #8b90a0; text-decoration: none; transition: background 0.15s; }
+.sidebar nav a:hover { background: rgba(255,255,255,0.05); }
+.sidebar nav a.active { background: rgba(108,99,255,0.15); color: #fff; border-left: 3px solid #6c63ff; }
+.sidebar nav a .icon { width: 18px; text-align: center; }
+.sidebar .badge { background: #ef4444; color: #fff; border-radius: 10px; padding: 1px 7px; font-size: 10px; font-weight: 600; margin-left: auto; }
+.main { flex: 1; display: flex; flex-direction: column; }
+.topbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 28px; background: #fff; border-bottom: 1px solid #e5e7eb; }
+.topbar h1 { font-size: 18px; font-weight: 700; color: #1a1a2e; }
+.topbar .user { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #6b7280; }
+.topbar .avatar { width: 28px; height: 28px; border-radius: 50%; background: #6c63ff; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; }
+.content { padding: 24px 28px; flex: 1; }
+.card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 16px; }
+.card-title { font-size: 14px; font-weight: 600; color: #1a1a2e; margin-bottom: 14px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 10px 12px; background: #f9fafb; color: #6b7280; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid #e5e7eb; }
+td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; }
+.badge-ok { background: #dcfce7; color: #166534; border-radius: 12px; padding: 2px 10px; font-size: 11px; font-weight: 500; }
+.badge-warn { background: #fef3c7; color: #92400e; border-radius: 12px; padding: 2px 10px; font-size: 11px; font-weight: 500; }
+.badge-danger { background: #fee2e2; color: #991b1b; border-radius: 12px; padding: 2px 10px; font-size: 11px; font-weight: 500; }
+.badge-info { background: #e0e7ff; color: #3730a3; border-radius: 12px; padding: 2px 10px; font-size: 11px; font-weight: 500; }
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+.stat-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; }
+.stat-card .label { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.3px; }
+.stat-card .value { font-size: 24px; font-weight: 700; margin-top: 4px; }
+.stat-card .sub { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+.checkbox { width: 16px; height: 16px; border-radius: 3px; border: 2px solid #d1d5db; display: inline-block; vertical-align: middle; }
+.checkbox.checked { background: #6c63ff; border-color: #6c63ff; position: relative; }
+.checkbox.checked::after { content: "✓"; color: #fff; font-size: 11px; position: absolute; top: -1px; left: 2px; }

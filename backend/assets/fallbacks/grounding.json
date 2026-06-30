@@ -1,0 +1,190 @@
+[
+  {
+    "type": "scene_start",
+    "scene": "grounding",
+    "stage": "dashboard"
+  },
+  {
+    "type": "query_start",
+    "query_index": 0,
+    "query": "在这个监控面板中，哪个服务的CPU使用率最高？它的具体数值是多少？"
+  },
+  {
+    "type": "step",
+    "step": 1,
+    "query_index": 0,
+    "thought": "我需要在监控面板中找到显示服务健康状况的表格，该表格包含'SERVICE'、'CPU%'等列。通过扫描'CPU%'列，可以找到最大值。在表格中，'cache-layer'服务的CPU%值为87，是所有服务中最高的。",
+    "groundings": [
+      {
+        "bbox": [
+          0.015,
+          0.391,
+          0.983,
+          0.695
+        ],
+        "label": "服务健康状况表格，包含CPU%列",
+        "query_index": 0
+      },
+      {
+        "bbox": [
+          0.359,
+          0.508,
+          0.383,
+          0.528
+        ],
+        "label": "cache-layer服务的CPU%值",
+        "query_index": 0
+      }
+    ],
+    "answer": "CPU使用率最高的服务是 cache-layer，其具体数值为 87%。",
+    "elapsed": 3.3,
+    "usage": {
+      "prompt_tokens": 645,
+      "completion_tokens": 185
+    }
+  },
+  {
+    "type": "query_end",
+    "query_index": 0,
+    "query": "在这个监控面板中，哪个服务的CPU使用率最高？它的具体数值是多少？",
+    "answer": "CPU使用率最高的服务是 cache-layer，其具体数值为 87%。"
+  },
+  {
+    "type": "query_start",
+    "query_index": 1,
+    "query": "过去24小时P99延迟有没有异常峰值？具体在什么时间、峰值是多少？"
+  },
+  {
+    "type": "step",
+    "step": 2,
+    "query_index": 1,
+    "thought": "我需要找到过去24小时P99延迟的详细图表，该图表位于界面左上角区域。图表下方有文字说明，明确指出了峰值时间和数值。根据图表和文字描述，峰值发生在14:15，数值为892ms。",
+    "groundings": [
+      {
+        "bbox": [
+          0.01,
+          0.19,
+          0.485,
+          0.344
+        ],
+        "label": "P99 LATENCY — 24H DETAIL 图表及说明",
+        "query_index": 1
+      }
+    ],
+    "answer": "有异常峰值。具体在14:15，峰值为892ms。",
+    "elapsed": 3.75,
+    "usage": {
+      "prompt_tokens": 647,
+      "completion_tokens": 148
+    }
+  },
+  {
+    "type": "query_end",
+    "query_index": 1,
+    "query": "过去24小时P99延迟有没有异常峰值？具体在什么时间、峰值是多少？",
+    "answer": "有异常峰值。具体在14:15，峰值为892ms。"
+  },
+  {
+    "type": "query_start",
+    "query_index": 2,
+    "query": "这个延迟峰值和哪次部署操作有关？请同时定位延迟面板和部署时间线中的相关事件。"
+  },
+  {
+    "type": "step",
+    "step": 3,
+    "query_index": 2,
+    "thought": "我需要找到延迟峰值的时间点，并在部署时间线中找到对应时间的部署事件。首先，观察P99 LATENCY — 24H DETAIL面板，峰值出现在14:15，标记为892ms，服务为service-gamma。接着，在DEPLOYMENT TIMELINE面板中，我看到在14:12有一个部署事件，版本为v2.41，目标服务是service-gamma，且在14:15时有'P99 latency spike 892ms'的incident correlation记录，这与延迟峰值时间点吻合。因此，延迟峰值与14:12的v2.41部署相关。",
+    "groundings": [
+      {
+        "bbox": [
+          0.01,
+          0.197,
+          0.485,
+          0.35
+        ],
+        "label": "P99延迟24小时详情面板，显示峰值892ms发生在14:15，服务为service-gamma",
+        "query_index": 2
+      },
+      {
+        "bbox": [
+          0.495,
+          0.197,
+          0.985,
+          0.35
+        ],
+        "label": "部署时间线面板，显示14:12部署v2.41到service-gamma，并在14:15记录了延迟峰值事件",
+        "query_index": 2
+      }
+    ],
+    "answer": "延迟峰值与14:12部署的v2.41版本到service-gamma服务有关。",
+    "elapsed": 5.45,
+    "usage": {
+      "prompt_tokens": 650,
+      "completion_tokens": 323
+    }
+  },
+  {
+    "type": "query_end",
+    "query_index": 2,
+    "query": "这个延迟峰值和哪次部署操作有关？请同时定位延迟面板和部署时间线中的相关事件。",
+    "answer": "延迟峰值与14:12部署的v2.41版本到service-gamma服务有关。"
+  },
+  {
+    "type": "scene_end",
+    "scene": "grounding",
+    "total_steps": 3,
+    "total_groundings": 5,
+    "groundings": [
+      {
+        "bbox": [
+          0.015,
+          0.391,
+          0.983,
+          0.695
+        ],
+        "label": "服务健康状况表格，包含CPU%列",
+        "query_index": 0
+      },
+      {
+        "bbox": [
+          0.359,
+          0.508,
+          0.383,
+          0.528
+        ],
+        "label": "cache-layer服务的CPU%值",
+        "query_index": 0
+      },
+      {
+        "bbox": [
+          0.01,
+          0.19,
+          0.485,
+          0.344
+        ],
+        "label": "P99 LATENCY — 24H DETAIL 图表及说明",
+        "query_index": 1
+      },
+      {
+        "bbox": [
+          0.01,
+          0.197,
+          0.485,
+          0.35
+        ],
+        "label": "P99延迟24小时详情面板，显示峰值892ms发生在14:15，服务为service-gamma",
+        "query_index": 2
+      },
+      {
+        "bbox": [
+          0.495,
+          0.197,
+          0.985,
+          0.35
+        ],
+        "label": "部署时间线面板，显示14:12部署v2.41到service-gamma，并在14:15记录了延迟峰值事件",
+        "query_index": 2
+      }
+    ]
+  }
+]

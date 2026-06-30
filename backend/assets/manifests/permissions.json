@@ -1,0 +1,53 @@
+{
+  "stage": "permissions",
+  "image": "permissions.png",
+  "width": 1120,
+  "height": 1139,
+  "elements": [
+    {
+      "id": "permission-matrix-card",
+      "rect": {
+        "x": 0.2214,
+        "y": 0.345,
+        "w": 0.7536,
+        "h": 0.6198
+      }
+    },
+    {
+      "id": "perm-matrix",
+      "rect": {
+        "x": 0.2402,
+        "y": 0.3907,
+        "w": 0.7161,
+        "h": 0.5338
+      }
+    },
+    {
+      "id": "perm-guest-admin-write",
+      "rect": {
+        "x": 0.2402,
+        "y": 0.7836,
+        "w": 0.7161,
+        "h": 0.0281
+      }
+    },
+    {
+      "id": "perm-guest-admin-delete",
+      "rect": {
+        "x": 0.2402,
+        "y": 0.8117,
+        "w": 0.7161,
+        "h": 0.0281
+      }
+    },
+    {
+      "id": "perm-footnote",
+      "rect": {
+        "x": 0.2402,
+        "y": 0.935,
+        "w": 0.7161,
+        "h": 0.0114
+      }
+    }
+  ]
+}
