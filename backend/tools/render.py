@@ -13,7 +13,7 @@ SITE_DIR = ASSETS / "site"
 PAGES_DIR = ASSETS / "pages"
 MANIFESTS_DIR = ASSETS / "manifests"
 
-VIEWPORT = {"width": 1440, "height": 900}
+VIEWPORT = {"width": 1800, "height": 1200}
 DEVICE_SCALE = 2
 
 PAGES: dict[str, dict] = {
@@ -21,12 +21,15 @@ PAGES: dict[str, dict] = {
         "file": "dashboard.html",
         "elements": [
             "cpu-panel", "memory-panel", "network-panel", "error-panel",
-            "latency-mini", "rps-panel", "db-panel", "queue-panel",
+            "latency-mini", "rps-panel",
             "alerts-panel", "deps-panel",
             "latency-panel", "deploy-panel",
             "deploy-v231", "deploy-v232", "deploy-v233", "deploy-v240", "deploy-v240-rb",
-            "endpoint-panel", "region-panel", "resource-panel",
-            "service-table-title", "service-table", "svc-auth", "svc-gamma",
+            "endpoint-panel", "db-panel",
+            "service-table-title", "service-table-panel", "service-table",
+            "svc-auth", "svc-gamma",
+            "kafka-panel", "connpool-panel",
+            "region-panel", "resource-panel",
         ],
     },
     "overview": {

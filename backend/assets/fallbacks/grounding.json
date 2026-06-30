@@ -13,51 +13,31 @@
     "type": "step",
     "step": 1,
     "query_index": 0,
-    "thought": "我需要在截图中找到包含28个服务的列表，然后定位到CPU使用率最高的服务。在截图的下半部分，有一个名为'Service Health Matrix'的表格，其中列出了多个服务及其CPU使用率（CPU%）和副本数（COPIES）。通过观察该表格，我发现CPU%列中数值最高的服务是'service-01'，其CPU使用率为98.7%，副本数为1。我将框出该行数据以确认。",
+    "thought": "首先，我需要定位到显示所有28个服务的区域，即右侧的 'Service Health' 表格。该表格列出了每个服务的名称、状态、CPU、内存、Pods、错误率等信息。为了找到CPU使用率最高的服务，我需要扫描 'CPU' 列，找出最大值。从表格中可以看到，'auth-service' 的CPU值为41，是所有服务中最高的。接着，我需要确认该服务的当前副本数，即 'Pods' 列对应的数值，为45。因此，答案是 'auth-service'，CPU使用率为41，副本数为45。",
     "groundings": [
       {
         "bbox": [
-          0.01,
-          0.558,
-          0.98,
-          0.97
+          0.596,
+          0.048,
+          0.984,
+          0.528
         ],
-        "label": "Service Health Matrix 表格，包含所有服务的CPU使用率和副本数",
-        "query_index": 0
-      },
-      {
-        "bbox": [
-          0.01,
-          0.565,
-          0.98,
-          0.595
-        ],
-        "label": "表格表头，包含CPU%和COPIES列",
-        "query_index": 0
-      },
-      {
-        "bbox": [
-          0.01,
-          0.595,
-          0.98,
-          0.625
-        ],
-        "label": "service-01 行，CPU%为98.7%，COPIES为1",
+        "label": "Service Health 表格，包含所有服务的CPU、Pods等信息",
         "query_index": 0
       }
     ],
-    "answer": "CPU使用率最高的服务是 service-01，其CPU使用率为98.7%，当前副本数为1。",
-    "elapsed": 4.88,
+    "answer": "CPU使用率最高的服务是 auth-service，其CPU使用率为41，当前副本数为45。",
+    "elapsed": 3.75,
     "usage": {
-      "prompt_tokens": 629,
-      "completion_tokens": 301
+      "prompt_tokens": 585,
+      "completion_tokens": 233
     }
   },
   {
     "type": "query_end",
     "query_index": 0,
     "query": "在这28个服务中，CPU使用率最高的是哪个？它的具体数值和当前副本数各是多少？",
-    "answer": "CPU使用率最高的服务是 service-01，其CPU使用率为98.7%，当前副本数为1。"
+    "answer": "CPU使用率最高的服务是 auth-service，其CPU使用率为41，当前副本数为45。"
   },
   {
     "type": "query_start",
@@ -68,61 +48,51 @@
     "type": "step",
     "step": 2,
     "query_index": 1,
-    "thought": "首先，我需要定位到显示P99延迟的图表。在顶部的监控面板中，有一个标有'P99 LATENCY'的图表，其峰值清晰可见。图表下方有文字标注峰值为'892ms'，并注明发生在'past 24h'，具体时间为'10:15'。此外，该图表下方还有一行文字说明：'service latency 99% approaching OOM'，表明服务延迟99%接近内存溢出（OOM）。同时，左侧的CPU和内存使用率图表显示CPU使用率高达92%，内存使用率71%，且有红色警告提示'CPU 92% > 85% threshold for 8s'和'memory 71% > 70% threshold for 1m'，说明CPU和内存资源接近饱和。因此，峰值为892ms，发生在10:15，CPU和内存资源接近饱和。",
+    "thought": "我需要在图中找到过去24小时的P99延迟图表，该图表位于左下角的'P99 LATENCY — 24H DETAIL (MULTI-SERVICES)'区域。从图表中可以看到一个明显的峰值，其数值标注为'852ms'，并标注了时间'2025-05-15 14:15'。此外，该峰值对应的警报信息在'ACTIVE ALERTS'区域中显示为'service latency P99 (852ms) > 300ms SLA (health)'，表明延迟超过了SLA阈值。同时，'RESOURCE SATURATION'区域显示'CPU'使用率为'92%'，'Memory'使用率为'71%'，'DB Connections'为'847/1000'，接近饱和。因此，峰值为852ms，发生在2025-05-15 14:15，受影响的资源是CPU、内存和数据库连接。",
     "groundings": [
       {
         "bbox": [
-          0.48,
-          0.032,
-          0.625,
-          0.145
+          0.012,
+          0.477,
+          0.585,
+          0.602
         ],
-        "label": "P99延迟图表，显示峰值为892ms，发生在10:15",
+        "label": "P99延迟图表，显示峰值为852ms，发生在14:15",
         "query_index": 1
       },
       {
         "bbox": [
-          0.48,
-          0.145,
-          0.625,
-          0.18
+          0.012,
+          0.325,
+          0.585,
+          0.45
         ],
-        "label": "P99延迟图表下方的文字说明，指出服务延迟99%接近OOM",
+        "label": "ACTIVE ALERTS区域，显示延迟警报",
         "query_index": 1
       },
       {
         "bbox": [
-          0.01,
-          0.032,
-          0.145,
-          0.145
+          0.772,
+          0.698,
+          0.985,
+          0.835
         ],
-        "label": "CPU使用率图表，显示92%并超过阈值",
-        "query_index": 1
-      },
-      {
-        "bbox": [
-          0.145,
-          0.032,
-          0.28,
-          0.145
-        ],
-        "label": "内存使用率图表，显示71%并超过阈值",
+        "label": "RESOURCE SATURATION区域，显示CPU、内存和数据库连接使用率",
         "query_index": 1
       }
     ],
-    "answer": "过去24小时P99延迟的峰值为892毫秒，发生在10:15。CPU和内存资源因此接近饱和，CPU使用率达92%（超过85%阈值），内存使用率达71%（超过70%阈值），且服务延迟99%接近OOM。",
-    "elapsed": 6.36,
+    "answer": "过去24小时P99延迟的峰值为852毫秒，发生在2025-05-15 14:15。受影响的资源包括CPU（92%）、内存（71%）和数据库连接（847/1000，接近饱和）。",
+    "elapsed": 6.82,
     "usage": {
-      "prompt_tokens": 635,
-      "completion_tokens": 492
+      "prompt_tokens": 591,
+      "completion_tokens": 456
     }
   },
   {
     "type": "query_end",
     "query_index": 1,
     "query": "过去24小时P99延迟出现了异常峰值，峰值具体是多少毫秒？发生在什么时间？同时指出哪些资源因此接近饱和。",
-    "answer": "过去24小时P99延迟的峰值为892毫秒，发生在10:15。CPU和内存资源因此接近饱和，CPU使用率达92%（超过85%阈值），内存使用率达71%（超过70%阈值），且服务延迟99%接近OOM。"
+    "answer": "过去24小时P99延迟的峰值为852毫秒，发生在2025-05-15 14:15。受影响的资源包括CPU（92%）、内存（71%）和数据库连接（847/1000，接近饱和）。"
   },
   {
     "type": "query_start",
@@ -133,116 +103,86 @@
     "type": "step",
     "step": 3,
     "query_index": 2,
-    "thought": "用户要求根据事件关联时间线，找出v2.4.0部署后的级联故障链条，并定位从部署到回滚的全部事件。我需要在截图中找到‘DEPLOYMENT TIMELINE + EVENT CORRELATION’区域，该区域包含时间线和事件列表。在该区域中，我可以看到v2.4.0部署事件，以及后续的多个故障事件（如服务降级、数据库错误、CPU飙升等），最后是回滚操作。这些事件按时间顺序排列，构成了级联故障链条。",
+    "thought": "用户要求根据事件关联时间线，找出v2.4.0部署后的级联故障链条，并定位从部署到回滚的全部事件。我需要在图中找到'DEPLOYMENT TIMELINE - INCIDENT CORRELATION'区域，该区域明确列出了部署事件和后续的关联事件。从图中可以看到，v2.4.0部署发生在16:30，随后在16:32出现服务降级，接着是数据库连接池耗尽、Kafka分区背压、CPU飙升、内存泄漏等事件，最终在16:35触发回滚。这些事件按时间顺序排列，构成了完整的故障链条。",
     "groundings": [
       {
         "bbox": [
-          0.497,
-          0.263,
-          0.997,
-          0.41
+          0.01,
+          0.614,
+          0.587,
+          0.85
         ],
-        "label": "DEPLOYMENT TIMELINE + EVENT CORRELATION 区域，包含从部署到回滚的全部事件",
+        "label": "部署时间线和关联事件区域，包含v2.4.0部署、服务降级、数据库连接池耗尽、Kafka分区背压、CPU飙升、内存泄漏和回滚事件",
         "query_index": 2
       }
     ],
-    "answer": "v2.4.0部署后的级联故障链条为：部署后出现服务降级、数据库错误、CPU飙升、内存泄漏等故障，最终触发回滚操作。",
-    "elapsed": 3.89,
+    "answer": "v2.4.0部署后的级联故障链条为：16:30部署v2.4.0 → 16:32服务降级 → 16:33数据库连接池耗尽 → 16:34 Kafka分区背压 → 16:34 CPU飙升 → 16:34 内存泄漏 → 16:35回滚。",
+    "elapsed": 3.96,
     "usage": {
-      "prompt_tokens": 643,
-      "completion_tokens": 234
+      "prompt_tokens": 599,
+      "completion_tokens": 328
     }
   },
   {
     "type": "query_end",
     "query_index": 2,
     "query": "根据事件关联时间线，v2.4.0部署后的级联故障链条是什么？请定位部署时间线和关联表中从部署到回滚的全部事件。",
-    "answer": "v2.4.0部署后的级联故障链条为：部署后出现服务降级、数据库错误、CPU飙升、内存泄漏等故障，最终触发回滚操作。"
+    "answer": "v2.4.0部署后的级联故障链条为：16:30部署v2.4.0 → 16:32服务降级 → 16:33数据库连接池耗尽 → 16:34 Kafka分区背压 → 16:34 CPU飙升 → 16:34 内存泄漏 → 16:35回滚。"
   },
   {
     "type": "scene_end",
     "scene": "grounding",
     "total_steps": 3,
-    "total_groundings": 8,
+    "total_groundings": 5,
     "groundings": [
       {
         "bbox": [
-          0.01,
-          0.558,
-          0.98,
-          0.97
+          0.596,
+          0.048,
+          0.984,
+          0.528
         ],
-        "label": "Service Health Matrix 表格，包含所有服务的CPU使用率和副本数",
+        "label": "Service Health 表格，包含所有服务的CPU、Pods等信息",
         "query_index": 0
       },
       {
         "bbox": [
-          0.01,
-          0.565,
-          0.98,
-          0.595
+          0.012,
+          0.477,
+          0.585,
+          0.602
         ],
-        "label": "表格表头，包含CPU%和COPIES列",
-        "query_index": 0
-      },
-      {
-        "bbox": [
-          0.01,
-          0.595,
-          0.98,
-          0.625
-        ],
-        "label": "service-01 行，CPU%为98.7%，COPIES为1",
-        "query_index": 0
-      },
-      {
-        "bbox": [
-          0.48,
-          0.032,
-          0.625,
-          0.145
-        ],
-        "label": "P99延迟图表，显示峰值为892ms，发生在10:15",
+        "label": "P99延迟图表，显示峰值为852ms，发生在14:15",
         "query_index": 1
       },
       {
         "bbox": [
-          0.48,
-          0.145,
-          0.625,
-          0.18
+          0.012,
+          0.325,
+          0.585,
+          0.45
         ],
-        "label": "P99延迟图表下方的文字说明，指出服务延迟99%接近OOM",
+        "label": "ACTIVE ALERTS区域，显示延迟警报",
+        "query_index": 1
+      },
+      {
+        "bbox": [
+          0.772,
+          0.698,
+          0.985,
+          0.835
+        ],
+        "label": "RESOURCE SATURATION区域，显示CPU、内存和数据库连接使用率",
         "query_index": 1
       },
       {
         "bbox": [
           0.01,
-          0.032,
-          0.145,
-          0.145
+          0.614,
+          0.587,
+          0.85
         ],
-        "label": "CPU使用率图表，显示92%并超过阈值",
-        "query_index": 1
-      },
-      {
-        "bbox": [
-          0.145,
-          0.032,
-          0.28,
-          0.145
-        ],
-        "label": "内存使用率图表，显示71%并超过阈值",
-        "query_index": 1
-      },
-      {
-        "bbox": [
-          0.497,
-          0.263,
-          0.997,
-          0.41
-        ],
-        "label": "DEPLOYMENT TIMELINE + EVENT CORRELATION 区域，包含从部署到回滚的全部事件",
+        "label": "部署时间线和关联事件区域，包含v2.4.0部署、服务降级、数据库连接池耗尽、Kafka分区背压、CPU飙升、内存泄漏和回滚事件",
         "query_index": 2
       }
     ]
