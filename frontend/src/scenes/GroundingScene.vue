@@ -158,9 +158,9 @@ defineExpose({ start, stop })
 .scene-main {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
 }
 .scene-side {
   width: 340px;

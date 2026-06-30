@@ -185,7 +185,7 @@ const overlayStyle = computed(() => ({
   width: 100%;
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
   background: #0d0f14;
   border-radius: 10px;
   border: 1px solid #1e222a;

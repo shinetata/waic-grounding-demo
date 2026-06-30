@@ -19,13 +19,16 @@ from ..env.screenshot import ScreenshotEnv
 
 
 def _normalize_bbox(bbox: list) -> list:
-    """Normalize bbox to [0,1] range. Qwen VL uses 0-1000 coordinate space."""
+    """Normalize bbox from [0,1000] integer space to [0,1] float range."""
     if not bbox or len(bbox) != 4:
         return [0, 0, 1, 1]
     vals = [float(v) for v in bbox]
     if any(v > 1.0 for v in vals):
         vals = [v / 1000.0 for v in vals]
-    return [max(0.0, min(1.0, v)) for v in vals]
+    vals = [max(0.0, min(1.0, v)) for v in vals]
+    if vals[2] - vals[0] < 0.01 or vals[3] - vals[1] < 0.01:
+        return [0, 0, 1, 1]
+    return vals
 
 
 async def run_grounding(
@@ -135,14 +138,23 @@ async def run_navigation(
     findings: list[dict] = []
     visited: set[str] = {obs.stage}
     skipped: list[dict] = []
+    see_count_per_stage: dict[str, int] = {}
+    max_see_per_stage = 2
 
     for step_num in range(1, max_steps + 1):
         t0 = time.monotonic()
 
-        traj_summary = "\n".join(
-            f"  {i+1}. [{t['stage']}] {t['action_type']}: {t['thought_short']}"
-            for i, t in enumerate(trajectory[-8:])
-        )
+        traj_lines = []
+        for i, t in enumerate(trajectory[-10:]):
+            parts = [f"{i+1}. [{t['stage']}] {t['action_type']}"]
+            if t.get("bbox_str"):
+                parts.append(f"bbox={t['bbox_str']}")
+            if t.get("finding_short"):
+                parts.append(f"发现: {t['finding_short']}")
+            else:
+                parts.append(t["thought_short"])
+            traj_lines.append("  ".join(parts))
+        traj_summary = "\n".join(traj_lines)
 
         messages = build_navigation_messages(
             system=NAVIGATION_SYSTEM,
@@ -166,13 +178,25 @@ async def run_navigation(
         action_target = action.get("target") if isinstance(action, dict) else None
         action_reason = action.get("reason", "") if isinstance(action, dict) else ""
 
-        traj_entry = {
+        # Force navigate/skip/eos if see limit reached for current stage
+        if action_type == "see":
+            count = see_count_per_stage.get(obs.stage, 0)
+            if count >= max_see_per_stage:
+                logger.info("See limit reached for %s (%d), forcing navigate", obs.stage, count)
+                action_type = "navigate"
+                remaining = [p["id"] for p in pages if p["id"] not in visited and not any(s["id"] == p["id"] for s in skipped)]
+                action_target = remaining[0] if remaining else None
+                if not action_target:
+                    action_type = "eos"
+
+        traj_entry: dict[str, Any] = {
             "step": step_num,
             "stage": obs.stage,
             "action_type": action_type,
-            "thought_short": thought[:80],
+            "thought_short": thought[:100],
         }
-        trajectory.append(traj_entry)
+        if finding:
+            traj_entry["finding_short"] = finding[:80]
 
         step_event: dict[str, Any] = {
             "type": "step",
@@ -192,6 +216,7 @@ async def run_navigation(
 
         if action_type == "eos":
             step_event["conclusion"] = thought
+            trajectory.append(traj_entry)
             yield step_event
             break
 
@@ -199,6 +224,7 @@ async def run_navigation(
             target_id = action_target if isinstance(action_target, str) else ""
             skipped.append({"id": target_id, "reason": action_reason})
             step_event["skipped_page"] = target_id
+            trajectory.append(traj_entry)
             yield step_event
             continue
 
@@ -216,6 +242,7 @@ async def run_navigation(
                 "crop_b64": obs.crop_b64,
             }
         elif action_type == "see":
+            see_count_per_stage[obs.stage] = see_count_per_stage.get(obs.stage, 0) + 1
             bbox = None
             if isinstance(action_target, list) and len(action_target) == 4:
                 bbox = action_target
@@ -227,6 +254,7 @@ async def run_navigation(
                     pass
             if bbox:
                 bbox = _normalize_bbox(bbox)
+                traj_entry["bbox_str"] = f"[{','.join(f'{v:.2f}' for v in bbox)}]"
                 action_dict = {"type": "see", "target": {"bbox": bbox}}
                 obs = env.step(action_dict)
             step_event["observation"] = {
@@ -239,6 +267,7 @@ async def run_navigation(
             if bbox:
                 step_event["groundings"] = [{"bbox": bbox, "label": action_reason or thought[:40]}]
 
+        trajectory.append(traj_entry)
         yield step_event
     else:
         yield {
