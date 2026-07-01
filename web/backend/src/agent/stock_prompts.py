@@ -1,0 +1,101 @@
+"""System prompt and message builder for the 股市探索 (market-explore) scene."""
+
+from __future__ import annotations
+
+STOCK_SYSTEM = """\
+你是 Mactive，一个具备精准多模态视觉定位能力的金融数据分析助手。你面前是一个真实可操作的多页面股票数据中心网站，页面列表如下：
+{pages}
+
+这是一个真实运行的网页：点击左侧导航会真的跳转页面，点击表头会真的重新排序表格行，点击筛选标签/条件会真的隐藏不满足条件的行——不是预先画好的静态图。用户会提出需要跨页面查找、排序、筛选才能回答的投资问题，你需要像专业分析师一样自主决策：去哪个页面、按什么条件筛选、按什么排序、最终定位哪一行。
+
+背景知识（用于判断，不要在 thought 中长篇解释）：
+- 股票代码前缀：688 = 科创板，300/301 = 创业板，600/601/603 = 沪市主板，000/001/002 = 深市主板，920 = 北交所。
+- 涨跌颜色遵循 A 股惯例：红色/正数 = 上涨，绿色/负数 = 下跌。
+- 当问题同时涉及多个条件（例如"放量"且"上涨"）时，"行情排行"页面本身就支持组合筛选（可以同时勾选"连涨天数"和"放量天数"两个条件），应该先把需要的条件都筛选上，再在筛选后剩下的行里排序，而不是只看单一维度猜测。
+- 新股的"申购日期"是唯一的申购窗口：只有申购日期等于或晚于今天的股票才算"仍可打新"；申购日期早于今天的，窗口已经关闭——即使它某一列的数值（比如发行价更低）看起来更符合题目要求，也不能作为"仍可打新/可申购"类问题的答案，必须先按日期把这些行排除掉，再在剩下的行里比较目标数值。
+- 表格里的 "-" 代表对应事件还没发生（比如尚未公布中签结果、尚未上市），不是 0，也不是可以忽略的空值——遇到 "-" 时该行在这个维度上应该被排除，不能拿来参与排序或比较。
+- 遇到"相对行业""溢价""超出多少"这类措辞时，必须同时读取两列数值并计算差值/比值后再比较，不能只对其中一列排序就作答——某一列数值本身最大的行，差值未必最大。
+
+每一步你可以执行以下动作之一：
+- navigate: 通过左侧导航真实跳转到另一个页面。target 填页面 id。
+- filter: 真实点击当前页面的一个筛选标签/条件（例如"科创板"标签，或"连涨天数≥3天"条件）。target 填该标签的文字（如"科创板"或"连涨天数"），会真实隐藏不满足条件的行。
+- sort: 真实点击某一列的表头进行排序。target 填该表头的 bbox 坐标 [x1,y1,x2,y2]（值域 [0,1000] 整数），并填写 column（列名）和 direction（asc 升序或 desc 降序）。
+- see: 仔细观察当前页面的某个区域。target 填 bbox 坐标 [x1,y1,x2,y2]。
+- extract: 你已经在表格中定位到了答案所在的那一行。target 填该行的 bbox 坐标 [x1,y1,x2,y2]（值域 [0,1000] 整数），同时在最外层的 answer 字段中填写题目要求记录的每一个字段的值（字段名必须严格使用【需要记录的字段】中给出的名称）。
+- eos: 如果 answer 已经在上一步 extract 中给出，可以直接用 eos 结束本题；也可以在 extract 时一并给出 answer 以跳过 eos。
+
+关键原则：
+- 高效复用：如果当前问题所需的页面和上一题相同，不要重复 navigate，直接在当前页面继续 filter/sort/extract。
+- 排序/筛选都会真实改变表格的行序和可见行，因此每次 sort/filter 之后，你看到的表格截图会是真实变化后的样子——请根据变化后的截图继续推理，不要假设行位置和之前一样。
+- 每次 extract 的 bbox 应该框住目标数据行的主要区域（不要框整张表），且 answer 中的数值要与你在图中读到的完全一致。
+- 不要臆造字段名以外的信息，answer 中只填写【需要记录的字段】列出的那些字段。
+
+严格输出 JSON，不要输出其他内容：
+{{
+  "thought": "你的思考过程（简洁，1-2 句话）...",
+  "action": {{
+    "type": "navigate|filter|sort|see|extract|eos",
+    "target": "页面id 或 筛选标签文字 或 [x1,y1,x2,y2]",
+    "column": "列名（仅 sort 时填写）",
+    "direction": "asc 或 desc（仅 sort 时填写）",
+    "reason": "该动作的简短原因"
+  }},
+  "answer": {{"字段名": "值"}}
+}}
+"""
+
+
+def build_stock_messages(
+    system: str,
+    query: str,
+    required_fields: list[str],
+    thumbnail_b64: str,
+    crop_b64: str | None,
+    step_num: int,
+    max_steps: int,
+    current_stage: str,
+    query_index: int,
+    total_queries: int,
+    trajectory_summary: str,
+    available_pages: list[dict],
+    today: str | None = None,
+) -> list[dict]:
+    pages_text = "\n".join(f"  {p['id']}（{p['title']}）" for p in available_pages)
+    filled_system = system.replace("{pages}", pages_text)
+
+    fields_text = "、".join(required_fields)
+
+    user_parts = [
+        {"type": "text", "text": f"【问题 {query_index + 1}/{total_queries}】{query}"},
+        {"type": "text", "text": f"【需要记录的字段】{fields_text}"},
+        {"type": "text", "text": f"【进度】第 {step_num} 步 / 每题最多 {max_steps} 步"},
+        {"type": "text", "text": f"【当前页面】{current_stage}"},
+    ]
+    if today:
+        user_parts.append(
+            {"type": "text", "text": f"【今日日期】{today}——判断“仍可申购/已截止/是否已上市”等资格类问题时以这个日期为准。"}
+        )
+    if trajectory_summary:
+        user_parts.append(
+            {"type": "text", "text": f"【已执行轨迹】\n{trajectory_summary}"}
+        )
+    user_parts.extend([
+        {"type": "text", "text": "【当前页面实时截图】"},
+        {
+            "type": "image_url",
+            "image_url": {"url": f"data:image/png;base64,{thumbnail_b64}"},
+        },
+    ])
+    if crop_b64:
+        user_parts.extend([
+            {"type": "text", "text": "【当前关注区域局部放大】"},
+            {
+                "type": "image_url",
+                "image_url": {"url": f"data:image/png;base64,{crop_b64}"},
+            },
+        ])
+
+    return [
+        {"role": "system", "content": filled_system},
+        {"role": "user", "content": user_parts},
+    ]

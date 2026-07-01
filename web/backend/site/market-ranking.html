@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1680">
+<title>行情排行 - FinData 数据中心</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="brand-mark">FinData</span><span class="brand-sub">数据中心</span></div>
+  <div class="nav">
+    <a class="active" href="#">数据中心</a>
+    <a href="#">行情中心</a>
+    <a href="#">资讯中心</a>
+    <a href="#">自选股</a>
+  </div>
+  <div class="ticker">
+    <div class="idx"><span class="idx-name">上证指数</span><span class="idx-val">3421.58</span><span class="idx-chg up">▲0.86%</span></div>
+    <div class="idx"><span class="idx-name">深证成指</span><span class="idx-val">11024.30</span><span class="idx-chg up">▲0.52%</span></div>
+    <div class="idx"><span class="idx-name">创业板指</span><span class="idx-val">2298.71</span><span class="idx-chg up">▲1.24%</span></div>
+    <div class="idx"><span class="idx-name">科创50</span><span class="idx-val">1456.92</span><span class="idx-chg up">▲2.15%</span></div>
+  </div>
+</div>
+
+<div class="subbar" data-filter-root>
+  <div class="crumb">数据中心 &gt; <b>行情排行</b></div>
+  <div class="chip-group">
+    <span class="chip-label">条件筛选：</span>
+    <span class="chip" id="filter-rising" data-filter="rising3" data-filter-attr="risingDays" data-filter-min="3">连涨天数≥3天</span>
+    <span class="chip" id="filter-volume" data-filter="volume3" data-filter-attr="volumeDays" data-filter-min="3">放量天数≥3天</span>
+  </div>
+  <div class="updated">更新时间 2026-07-01 10:30</div>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <a id="nav-ipo-subscribe" href="ipo-subscribe.html"><span class="dot"></span>新股申购</a>
+    <a class="active" id="nav-market-ranking" href="market-ranking.html"><span class="dot"></span>行情排行</a>
+  </div>
+
+  <div class="main-content">
+    <div class="page-head">
+      <h1>行情排行</h1>
+      <span class="page-sub">技术选股候选池：可组合"连涨天数"/"放量天数"条件筛选，点击表头可排序</span>
+      <span class="page-count">共 12 条</span>
+    </div>
+
+    <div class="card">
+      <table id="market-ranking-table" data-page-table>
+        <thead>
+          <tr>
+            <th>排名</th><th>代码 / 简称</th><th>最新价(元)</th>
+            <th id="col-change" data-sort data-type="number">涨跌幅<span class="sort-ico">⇅</span></th>
+            <th id="col-streak-rising" data-sort data-type="number">连涨天数<span class="sort-ico">⇅</span></th>
+            <th id="col-streak-volume" data-sort data-type="number">放量天数<span class="sort-ico">⇅</span></th>
+            <th id="col-turnover" data-sort data-type="number">换手率<span class="sort-ico">⇅</span></th>
+            <th>所属行业</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr id="row-yiguang" data-rising-days="11" data-volume-days="5"><td class="rank-cell">1</td><td><span class="name">屹光科技</span><br><span class="code">688591</span></td><td>156.80</td><td class="up">+6.42%</td><td>11天</td><td>5天</td><td>58.20%</td><td>半导体</td></tr>
+          <tr id="row-pengpai" data-rising-days="9" data-volume-days="6"><td class="rank-cell">2</td><td><span class="name">澎湃动力</span><br><span class="code">300512</span></td><td>68.40</td><td class="up">+8.15%</td><td>9天</td><td>6天</td><td>47.85%</td><td>智能装备</td></tr>
+          <tr id="row-hengjin" data-rising-days="8" data-volume-days="7"><td class="rank-cell">3</td><td><span class="name">恒锦新材</span><br><span class="code">002983</span></td><td>34.92</td><td class="up">+5.20%</td><td>8天</td><td>7天</td><td>39.60%</td><td>化工</td></tr>
+          <tr id="row-hongtu" data-rising-days="7" data-volume-days="8"><td class="rank-cell">4</td><td><span class="name">宏图重工</span><br><span class="code">601759</span></td><td>22.15</td><td class="up">+3.88%</td><td>7天</td><td>8天</td><td>28.90%</td><td>工程机械</td></tr>
+          <tr id="row-yinhai" data-rising-days="6" data-volume-days="4"><td class="rank-cell">5</td><td><span class="name">银海电子</span><br><span class="code">002937</span></td><td>28.66</td><td class="up">+9.30%</td><td>6天</td><td>4天</td><td>33.40%</td><td>消费电子</td></tr>
+          <tr id="row-xinqu" data-rising-days="5" data-volume-days="3"><td class="rank-cell">6</td><td><span class="name">芯驱科技</span><br><span class="code">688455</span></td><td>66.80</td><td class="up">+7.05%</td><td>5天</td><td>3天</td><td>29.88%</td><td>半导体</td></tr>
+          <tr id="row-gechuang" data-rising-days="4" data-volume-days="4"><td class="rank-cell">7</td><td><span class="name">格创动能</span><br><span class="code">300856</span></td><td>45.20</td><td class="up">+19.98%</td><td>4天</td><td>4天</td><td>32.15%</td><td>智能装备</td></tr>
+          <tr id="row-mingtai" data-rising-days="4" data-volume-days="3"><td class="rank-cell">8</td><td><span class="name">铭泰股份</span><br><span class="code">603219</span></td><td>15.30</td><td class="up">+4.10%</td><td>4天</td><td>3天</td><td>28.90%</td><td>建筑材料</td></tr>
+          <tr id="row-huida" data-rising-days="3" data-volume-days="2"><td class="rank-cell">9</td><td><span class="name">汇达医疗</span><br><span class="code">002419</span></td><td>18.75</td><td class="up">+2.95%</td><td>3天</td><td>2天</td><td>18.60%</td><td>医疗器械</td></tr>
+          <tr id="row-dier" data-rising-days="3" data-volume-days="2"><td class="rank-cell">10</td><td><span class="name">迪尔智控</span><br><span class="code">300678</span></td><td>52.60</td><td class="up">+6.88%</td><td>3天</td><td>2天</td><td>26.75%</td><td>智能装备</td></tr>
+          <tr id="row-hongxin1" data-rising-days="2" data-volume-days="2"><td class="rank-cell">11</td><td><span class="name">泓芯电子</span><br><span class="code">688320</span></td><td>88.40</td><td class="up">+4.55%</td><td>2天</td><td>2天</td><td>22.10%</td><td>半导体</td></tr>
+          <tr id="row-huaxin" data-rising-days="2" data-volume-days="1"><td class="rank-cell">12</td><td><span class="name">华信新能</span><br><span class="code">002156</span></td><td>26.10</td><td class="up">+3.40%</td><td>2天</td><td>1天</td><td>12.40%</td><td>电力设备</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="foot-note">数据为模拟演示数据，不代表任何真实上市公司走势，仅用于产品能力展示，不构成投资建议。</div>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+</body>
+</html>
