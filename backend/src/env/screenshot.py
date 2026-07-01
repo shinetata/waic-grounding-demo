@@ -109,6 +109,6 @@ class ScreenshotEnv:
 
     def get_stage_titles(self) -> list[dict]:
         return [
-            {"id": s.id, "title": s.title}
+            {"id": s.id, "title": s.title, "group": s.group}
             for s in [self.stages[sid] for sid in self.stage_order]
         ]

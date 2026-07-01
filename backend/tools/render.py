@@ -71,6 +71,39 @@ PAGES: dict[str, dict] = {
             "log-suspicious-1", "log-suspicious-2", "log-suspicious-3",
         ],
     },
+    "ipo-overview": {
+        "file": "ipo-overview.html",
+        "elements": [
+            "tab-all", "tab-sh-main", "tab-sz-main", "tab-gem", "tab-star", "tab-bse",
+            "ipo-overview-table",
+            "row-ov-huineng", "row-ov-yunzhu",
+        ],
+    },
+    "ipo-star": {
+        "file": "ipo-star.html",
+        "elements": [
+            "col-price", "col-pe", "col-date", "ipo-star-table",
+            "row-huinengchuneng", "row-yunzhu",
+        ],
+    },
+    "rank-rising": {
+        "file": "rank-rising.html",
+        "elements": [
+            "col-change", "col-streak", "rank-rising-table", "row-gechuang",
+        ],
+    },
+    "rank-volume": {
+        "file": "rank-volume.html",
+        "elements": [
+            "col-change", "col-streak", "rank-volume-table", "row-gechuang",
+        ],
+    },
+    "rank-vol-price": {
+        "file": "rank-vol-price.html",
+        "elements": [
+            "col-change", "rank-vol-price-table", "row-gechuang",
+        ],
+    },
 }
 
 

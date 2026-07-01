@@ -2,14 +2,16 @@
 import { ref } from 'vue'
 import GroundingScene from './scenes/GroundingScene.vue'
 import NavigationScene from './scenes/NavigationScene.vue'
+import StockScene from './scenes/StockScene.vue'
 
-type Scene = 'grounding' | 'navigation'
+type Scene = 'grounding' | 'navigation' | 'stock'
 type PlayState = 'playing' | 'paused' | 'stopped'
 
 const currentScene = ref<Scene>('grounding')
 const playState = ref<PlayState>('stopped')
 const groundingRef = ref<InstanceType<typeof GroundingScene> | null>(null)
 const navigationRef = ref<InstanceType<typeof NavigationScene> | null>(null)
+const stockRef = ref<InstanceType<typeof StockScene> | null>(null)
 
 let switchTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -22,14 +24,19 @@ function switchScene(scene: Scene) {
   currentScene.value = scene
 }
 
+function activeSceneRef() {
+  if (currentScene.value === 'grounding') return groundingRef.value
+  if (currentScene.value === 'navigation') return navigationRef.value
+  return stockRef.value
+}
+
 function handleDone() {
   playState.value = 'stopped'
 }
 
 function play() {
   playState.value = 'playing'
-  if (currentScene.value === 'grounding') groundingRef.value?.start()
-  else navigationRef.value?.start()
+  activeSceneRef()?.start()
 }
 
 function pause() {
@@ -46,12 +53,12 @@ function stop() {
   clearSwitchTimer()
   groundingRef.value?.stop?.()
   navigationRef.value?.stop?.()
+  stockRef.value?.stop?.()
 }
 
 function restart() {
   playState.value = 'playing'
-  if (currentScene.value === 'grounding') groundingRef.value?.start()
-  else navigationRef.value?.start()
+  activeSceneRef()?.start()
 }
 </script>
 
@@ -76,6 +83,13 @@ function restart() {
           @click="switchScene('navigation')"
         >
           🧭 认知导航
+        </button>
+        <button
+          class="scene-tab"
+          :class="{ active: currentScene === 'stock' }"
+          @click="switchScene('stock')"
+        >
+          📊 股票寻宝
         </button>
       </div>
       <div class="header-right">
@@ -112,6 +126,11 @@ function restart() {
       <NavigationScene
         v-show="currentScene === 'navigation'"
         ref="navigationRef"
+        @done="handleDone"
+      />
+      <StockScene
+        v-show="currentScene === 'stock'"
+        ref="stockRef"
         @done="handleDone"
       />
     </main>

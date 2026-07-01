@@ -15,11 +15,18 @@ from fastapi.staticfiles import StaticFiles
 
 load_dotenv()
 
-from .agent.loop import run_grounding, run_navigation
+from .agent.loop import run_grounding, run_navigation, run_stock
 from .env.base import ASSETS_DIR, PAGES_DIR
 from .env.screenshot import ScreenshotEnv
 from .scenes.grounding import load_grounding_scene
 from .scenes.navigation import load_navigation_scene
+from .scenes.stock import (
+    COLUMN_HINTS,
+    QUERY_CLUES,
+    QUERY_FIELDS,
+    QUERY_GROUND_TRUTH,
+    load_stock_scene,
+)
 
 logger = logging.getLogger("demo")
 logging.basicConfig(level=logging.INFO)
@@ -56,6 +63,12 @@ async def list_scenes():
                 "subtitle": "智能信息空间导航能力",
                 "description": "在多页面管理后台中，模型自主选路、主动跳过无关内容",
             },
+            {
+                "id": "stock",
+                "title": "股票寻宝",
+                "subtitle": "跨页面信息整合能力展示",
+                "description": "在分散的股票数据中心页面中，模型自主排序、筛选、跨页整合出精准答案",
+            },
         ]
     }
 
@@ -70,6 +83,12 @@ async def grounding_info():
 async def navigation_info():
     _, task = load_navigation_scene()
     return {"scene": "navigation", "task": task}
+
+
+@app.get("/api/scenes/stock")
+async def stock_info():
+    _, queries = load_stock_scene()
+    return {"scene": "stock", "queries": queries, "fields": QUERY_FIELDS}
 
 
 @app.get("/api/config")
@@ -118,6 +137,16 @@ async def ws_run(ws: WebSocket, scene: str = "grounding"):
             stages, task = load_navigation_scene()
             env = ScreenshotEnv(stages)
             gen = run_navigation(env, task)
+        elif scene == "stock":
+            stages, queries = load_stock_scene()
+            env = ScreenshotEnv(stages)
+            gen = run_stock(
+                env, queries,
+                required_fields=QUERY_FIELDS,
+                ground_truth=QUERY_GROUND_TRUTH,
+                query_clues=QUERY_CLUES,
+                column_hints=COLUMN_HINTS,
+            )
         else:
             await ws.send_json({"type": "error", "message": f"Unknown scene: {scene}"})
             return
