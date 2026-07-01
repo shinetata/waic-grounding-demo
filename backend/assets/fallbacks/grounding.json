@@ -13,31 +13,41 @@
     "type": "step",
     "step": 1,
     "query_index": 0,
-    "thought": "首先，我需要定位到显示所有28个服务的表格区域，该区域位于屏幕右侧，标题为'Service Health'。在该表格中，我需要找到CPU列中数值最大的行，即CPU使用率最高的服务。然后，从该行中读取服务名称、CPU数值和副本数（Replicas列）。通过观察，CPU列中最大值为41，对应的服务是'service-registry'，其副本数为1。我将框出该行数据以确保准确性。",
+    "thought": "I need to identify the service with the highest CPU usage among the 28 services listed in the table. I will scan the 'CPU' column for the maximum value, then find the corresponding service name and the number of replicas in the 'Replicas' column for that same row.",
     "groundings": [
       {
         "bbox": [
-          0.595,
-          0.075,
-          0.97,
-          0.518
+          0.04,
+          0.12,
+          0.96,
+          0.98
         ],
-        "label": "Service Health 表格，包含所有服务的CPU、内存、副本数等信息",
+        "label": "service_monitoring_table",
+        "query_index": 0
+      },
+      {
+        "bbox": [
+          0.04,
+          0.45,
+          0.96,
+          0.49
+        ],
+        "label": "highest_cpu_service_row",
         "query_index": 0
       }
     ],
-    "answer": "CPU使用率最高的服务是'service-registry'，其CPU使用率为41%，当前副本数为1。",
-    "elapsed": 3.57,
+    "answer": "CPU使用率最高的是 'auth-service'，具体数值为 85%，当前副本数为 3。",
+    "elapsed": 1.77,
     "usage": {
-      "prompt_tokens": 672,
-      "completion_tokens": 203
+      "prompt_tokens": 608,
+      "completion_tokens": 200
     }
   },
   {
     "type": "query_end",
     "query_index": 0,
     "query": "在这28个服务中，CPU使用率最高的是哪个？它的具体数值和当前副本数各是多少？",
-    "answer": "CPU使用率最高的服务是'service-registry'，其CPU使用率为41%，当前副本数为1。"
+    "answer": "CPU使用率最高的是 'auth-service'，具体数值为 85%，当前副本数为 3。"
   },
   {
     "type": "query_start",
@@ -48,51 +58,41 @@
     "type": "step",
     "step": 2,
     "query_index": 1,
-    "thought": "首先定位到 'P99 LATENCY - 24H (DETAIL: MULTI-SERVICES)' 图表，该图表显示了过去24小时的P99延迟趋势。从图中可以看到一个明显的峰值，其数值标注为 '852ms'，对应的时间点在图表横轴上标记为 '10:00'。接着，查看 'ACTIVE ALERTS' 区域，发现多个警报与该峰值相关，特别是 'service-gateway P99 latency 850ms > 300ms SLA breach'，说明服务网关延迟超标。同时，'service-gateway memory 85% approaching OOM' 表明内存接近饱和。此外，'CPU 92%' 和 'MEMORY 71%' 也显示系统整体资源压力较大。因此，峰值为852ms，发生在10:00，受影响的资源包括服务网关的内存和整体CPU、内存资源。",
+    "thought": "用户询问过去24小时P99延迟的峰值、发生时间以及受影响的饱和资源。我需要定位到P99延迟的趋势图表以找到峰值及其对应的时间点，并查看资源利用率面板（如CPU或内存）来确认哪些资源接近饱和。",
     "groundings": [
       {
         "bbox": [
-          0.015,
-          0.475,
-          0.585,
-          0.616
+          0.1,
+          0.2,
+          0.6,
+          0.4
         ],
-        "label": "P99延迟24小时趋势图，显示峰值852ms发生在10:00",
+        "label": "P99延迟趋势图",
         "query_index": 1
       },
       {
         "bbox": [
-          0.015,
-          0.325,
-          0.585,
-          0.45
+          0.65,
+          0.2,
+          0.95,
+          0.5
         ],
-        "label": "活跃警报列表，包含延迟超标和内存接近OOM的警报",
-        "query_index": 1
-      },
-      {
-        "bbox": [
-          0.015,
-          0.04,
-          0.585,
-          0.18
-        ],
-        "label": "CPU和内存使用率，显示CPU 92%，内存71%",
+        "label": "资源利用率面板",
         "query_index": 1
       }
     ],
-    "answer": "过去24小时P99延迟峰值为852毫秒，发生在10:00。受影响的资源包括服务网关内存（接近OOM）、整体CPU（92%）和内存（71%）资源。",
-    "elapsed": 5.77,
+    "answer": "由于您未提供具体的监控截图，我无法给出具体的数值和时间。请上传截图，我将为您精准定位P99延迟的峰值、时间点以及饱和的资源区域。",
+    "elapsed": 1.59,
     "usage": {
-      "prompt_tokens": 678,
-      "completion_tokens": 431
+      "prompt_tokens": 616,
+      "completion_tokens": 205
     }
   },
   {
     "type": "query_end",
     "query_index": 1,
     "query": "过去24小时P99延迟出现了异常峰值，峰值具体是多少毫秒？发生在什么时间？同时指出哪些资源因此接近饱和。",
-    "answer": "过去24小时P99延迟峰值为852毫秒，发生在10:00。受影响的资源包括服务网关内存（接近OOM）、整体CPU（92%）和内存（71%）资源。"
+    "answer": "由于您未提供具体的监控截图，我无法给出具体的数值和时间。请上传截图，我将为您精准定位P99延迟的峰值、时间点以及饱和的资源区域。"
   },
   {
     "type": "query_start",
@@ -103,86 +103,106 @@
     "type": "step",
     "step": 3,
     "query_index": 2,
-    "thought": "用户要求根据部署时间线和关联表，找出v2.4.0部署后的级联故障链条。我需要定位到'DEPLOYMENT TIMELINE - INCIDENT CORRELATION'部分，该区域包含部署事件（v2.4.0）、后续故障事件（如CPU、内存、延迟等）以及回滚事件（v2.3.0）。这些事件按时间顺序排列，形成故障链条。",
+    "thought": "用户要求分析v2.4.0部署后的级联故障链条。我需要定位两个关键区域：一是'DEVELOPMENT TIMELINE'，其中显示了v2.4.0的部署时间点；二是下方的'INCIDENT #INC-4827'关联表，该表详细列出了从部署开始到最终回滚的所有具体事件及其顺序。通过这两个区域的结合，可以清晰地看到故障的演进过程。",
     "groundings": [
       {
         "bbox": [
-          0.01,
-          0.574,
+          0.013,
+          0.415,
           0.585,
-          0.85
+          0.465
         ],
-        "label": "部署时间线与事件关联表，包含v2.4.0部署、故障事件及回滚事件",
+        "label": "部署时间线",
+        "query_index": 2
+      },
+      {
+        "bbox": [
+          0.013,
+          0.473,
+          0.585,
+          0.615
+        ],
+        "label": "故障关联事件表",
         "query_index": 2
       }
     ],
-    "answer": "v2.4.0部署后，级联故障链条为：服务CPU飙升→服务内存增长→服务延迟升高→Kafka消费者积压→最终回滚至v2.3.0。",
-    "elapsed": 3.24,
+    "answer": "v2.4.0部署后的级联故障链条为：v2.4.0部署至service-gamma (canary) -> service-gamma P99 latency升高 -> p99 spike 892ms 触发SLA阈值 -> 级联导致auth-service p99 > 340ms -> 出现5xx错误率 0.8% -> 最终在15:02执行回滚。",
+    "elapsed": 10.19,
     "usage": {
-      "prompt_tokens": 686,
-      "completion_tokens": 213
+      "prompt_tokens": 654,
+      "completion_tokens": 307
     }
   },
   {
     "type": "query_end",
     "query_index": 2,
     "query": "根据事件关联时间线，v2.4.0部署后的级联故障链条是什么？请定位部署时间线和关联表中从部署到回滚的全部事件。",
-    "answer": "v2.4.0部署后，级联故障链条为：服务CPU飙升→服务内存增长→服务延迟升高→Kafka消费者积压→最终回滚至v2.3.0。"
+    "answer": "v2.4.0部署后的级联故障链条为：v2.4.0部署至service-gamma (canary) -> service-gamma P99 latency升高 -> p99 spike 892ms 触发SLA阈值 -> 级联导致auth-service p99 > 340ms -> 出现5xx错误率 0.8% -> 最终在15:02执行回滚。"
   },
   {
     "type": "scene_end",
     "scene": "grounding",
     "total_steps": 3,
-    "total_groundings": 5,
+    "total_groundings": 6,
     "groundings": [
       {
         "bbox": [
-          0.595,
-          0.075,
-          0.97,
-          0.518
+          0.04,
+          0.12,
+          0.96,
+          0.98
         ],
-        "label": "Service Health 表格，包含所有服务的CPU、内存、副本数等信息",
+        "label": "service_monitoring_table",
         "query_index": 0
       },
       {
         "bbox": [
-          0.015,
-          0.475,
-          0.585,
-          0.616
-        ],
-        "label": "P99延迟24小时趋势图，显示峰值852ms发生在10:00",
-        "query_index": 1
-      },
-      {
-        "bbox": [
-          0.015,
-          0.325,
-          0.585,
-          0.45
-        ],
-        "label": "活跃警报列表，包含延迟超标和内存接近OOM的警报",
-        "query_index": 1
-      },
-      {
-        "bbox": [
-          0.015,
           0.04,
-          0.585,
-          0.18
+          0.45,
+          0.96,
+          0.49
         ],
-        "label": "CPU和内存使用率，显示CPU 92%，内存71%",
+        "label": "highest_cpu_service_row",
+        "query_index": 0
+      },
+      {
+        "bbox": [
+          0.1,
+          0.2,
+          0.6,
+          0.4
+        ],
+        "label": "P99延迟趋势图",
         "query_index": 1
       },
       {
         "bbox": [
-          0.01,
-          0.574,
-          0.585,
-          0.85
+          0.65,
+          0.2,
+          0.95,
+          0.5
         ],
-        "label": "部署时间线与事件关联表，包含v2.4.0部署、故障事件及回滚事件",
+        "label": "资源利用率面板",
+        "query_index": 1
+      },
+      {
+        "bbox": [
+          0.013,
+          0.415,
+          0.585,
+          0.465
+        ],
+        "label": "部署时间线",
+        "query_index": 2
+      },
+      {
+        "bbox": [
+          0.013,
+          0.473,
+          0.585,
+          0.615
+        ],
+        "label": "故障关联事件表",
         "query_index": 2
       }
     ]

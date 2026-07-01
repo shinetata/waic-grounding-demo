@@ -38,7 +38,7 @@ async def call_vlm(
     max_tokens: int = 1024,
 ) -> dict[str, Any]:
     client = _get_client()
-    model = model or os.getenv("MODEL_NAME", "qwen/qwen3.5-vl-instruct")
+    model = model or os.getenv("MODEL_NAME", "google/gemma-4-31b-it")
 
     resp = await client.chat.completions.create(
         model=model,

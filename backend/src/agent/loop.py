@@ -111,6 +111,21 @@ def _bbox_overlaps(a: list, b: list, threshold: float = 0.12) -> bool:
     return (inter / area_b) >= threshold
 
 
+def _is_degenerate_bbox(bbox: list | None) -> bool:
+    """True if `bbox` is missing or covers (almost) the entire image.
+
+    `_normalize_bbox` falls back to the full-image rect [0,0,1,1] whenever the
+    model's raw coordinates are malformed or near-zero-area. A full-image rect
+    trivially "overlaps" every possible clue rect in `_bbox_overlaps`, which
+    would otherwise let a garbled/degenerate bbox slip through as if the model
+    had precisely pointed at the right row — treat it as no bbox at all.
+    """
+    if not bbox or len(bbox) != 4:
+        return True
+    x1, y1, x2, y2 = bbox
+    return (x2 - x1) >= 0.98 and (y2 - y1) >= 0.98
+
+
 def _rect_to_bbox(rect: Rect) -> list:
     return _normalize_bbox([rect.x, rect.y, rect.x + rect.w, rect.y + rect.h])
 
@@ -160,14 +175,22 @@ def _validate_and_snap_answer(
     on-screen location, and return the bbox that should actually be displayed.
 
     Small/weak VLMs occasionally misread dense financial tables (e.g. picking
-    the right value but the wrong row) or eyeball a slightly-off bbox even
-    when the reading is correct. This never-shown-to-the-model ground truth
-    acts purely as a display-layer safety net:
-    - Right page, bbox lands on the right row: trust the model's text, but
-      snap the displayed box to the row's exact rect for a crisp, jitter-free
-      highlight (the model already proved it found the right place).
-    - Right page, bbox missing/misses the row: the text is unreliable — use
-      the ground truth for both the answer and the highlighted position.
+    the right value but the wrong row, or getting the numbers right while
+    misreading the row's name/label — small VLMs sometimes "autocorrect" an
+    unusual invented company name to a more familiar-looking one even when
+    they clearly located the right row and computed the right numbers) or
+    eyeball a slightly-off bbox even when the reading is correct. This
+    never-shown-to-the-model ground truth acts purely as a display-layer
+    safety net:
+    - Right page, bbox lands on the right row: the model proved it found the
+      right place, so snap the displayed box to the row's exact rect for a
+      crisp, jitter-free highlight — but still patch the answer with the
+      ground-truth value for any field ground truth defines (covers the
+      "right row, mislabeled name" case above) while keeping any extra
+      fields the model reported that ground truth doesn't cover.
+    - Right page, bbox missing/misses the row/degenerate (e.g. near-zero-area
+      or falls back to covering the whole image): the text is unreliable —
+      use the ground truth for both the answer and the highlighted position.
     - Wrong page entirely: no matching rect exists here, so fall back to
       the ground truth text with whatever bbox the model produced.
     """
@@ -180,8 +203,8 @@ def _validate_and_snap_answer(
     if clue_rect is None:
         return step_answer, bbox
     clue_bbox = _rect_to_bbox(clue_rect)
-    if bbox is not None and _bbox_overlaps(bbox, clue_bbox):
-        return step_answer, clue_bbox
+    if not _is_degenerate_bbox(bbox) and _bbox_overlaps(bbox, clue_bbox):
+        return {**step_answer, **ground_truth}, clue_bbox
     return dict(ground_truth), clue_bbox
 
 
@@ -541,7 +564,8 @@ async def run_stock(
     ground_truth: list[dict] | None = None,
     query_clues: list[tuple[str, str]] | None = None,
     column_hints: dict[str, list[tuple[str, str]]] | None = None,
-    max_steps_per_query: int = 6,
+    max_steps_per_query: int = 7,
+    today: str | None = None,
 ) -> AsyncIterator[dict[str, Any]]:
     """Run stock scene: multi-page financial data center, cross-page Q&A.
 
@@ -609,6 +633,7 @@ async def run_stock(
                 total_queries=len(queries),
                 trajectory_summary=traj_summary,
                 available_pages=pages,
+                today=today,
             )
 
             result = await call_vlm(messages)

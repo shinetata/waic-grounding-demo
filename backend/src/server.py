@@ -25,6 +25,7 @@ from .scenes.stock import (
     QUERY_CLUES,
     QUERY_FIELDS,
     QUERY_GROUND_TRUTH,
+    TODAY_DATE,
     load_stock_scene,
 )
 
@@ -146,6 +147,7 @@ async def ws_run(ws: WebSocket, scene: str = "grounding"):
                 ground_truth=QUERY_GROUND_TRUTH,
                 query_clues=QUERY_CLUES,
                 column_hints=COLUMN_HINTS,
+                today=TODAY_DATE,
             )
         else:
             await ws.send_json({"type": "error", "message": f"Unknown scene: {scene}"})

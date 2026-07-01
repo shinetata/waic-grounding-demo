@@ -12,6 +12,9 @@ STOCK_SYSTEM = """\
 - 股票代码前缀：688 = 科创板，300/301 = 创业板，600/601/603 = 沪市主板，000/001/002 = 深市主板，920 = 北交所。
 - 涨跌颜色遵循 A 股惯例：红色/正数 = 上涨，绿色/负数 = 下跌。
 - 当问题同时涉及多个条件（例如"放量"且"上涨"）时，优先寻找已经把这些条件组合好的专题页面（如"量价齐升"），而不是分别看单一维度的排行榜去猜测，因为单一排行榜的默认排序未必是"涨幅最高"。
+- 新股的"申购日期"是唯一的申购窗口：只有申购日期等于或晚于今天的股票才算"仍可打新"；申购日期早于今天的，窗口已经关闭——即使它某一列的数值（比如发行价更低）看起来更符合题目要求，也不能作为"仍可打新/可申购"类问题的答案，必须先按日期把这些行排除掉，再在剩下的行里比较目标数值。
+- 表格里的 "-" 代表对应事件还没发生（比如尚未公布中签结果、尚未上市），不是 0，也不是可以忽略的空值——遇到 "-" 时该行在这个维度上应该被排除，不能拿来参与排序或比较。
+- 遇到"相对行业""溢价""超出多少"这类措辞时，必须同时读取两列数值并计算差值/比值后再比较，不能只对其中一列排序就作答——某一列数值本身最大的行，差值未必最大。
 
 每一步你可以执行以下动作之一：
 - navigate: 通过左侧导航跳转到另一个页面。target 填页面 id。
@@ -55,6 +58,7 @@ def build_stock_messages(
     total_queries: int,
     trajectory_summary: str,
     available_pages: list[dict],
+    today: str | None = None,
 ) -> list[dict]:
     groups: dict[str, list[str]] = {}
     for p in available_pages:
@@ -72,6 +76,10 @@ def build_stock_messages(
         {"type": "text", "text": f"【进度】第 {step_num} 步 / 每题最多 {max_steps} 步"},
         {"type": "text", "text": f"【当前页面】{current_stage}"},
     ]
+    if today:
+        user_parts.append(
+            {"type": "text", "text": f"【今日日期】{today}——判断“仍可申购/已截止/是否已上市”等资格类问题时以这个日期为准。"}
+        )
     if trajectory_summary:
         user_parts.append(
             {"type": "text", "text": f"【已执行轨迹】\n{trajectory_summary}"}

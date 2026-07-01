@@ -77,13 +77,15 @@ PAGES: dict[str, dict] = {
             "tab-all", "tab-sh-main", "tab-sz-main", "tab-gem", "tab-star", "tab-bse",
             "ipo-overview-table",
             "row-ov-huineng", "row-ov-yunzhu",
+            "row-ov-yaochen", "row-ov-yihui", "row-ov-lingfeng",
         ],
     },
     "ipo-star": {
         "file": "ipo-star.html",
         "elements": [
-            "col-price", "col-pe", "col-date", "ipo-star-table",
+            "col-price", "col-pe", "col-industry-pe", "col-date", "ipo-star-table",
             "row-huinengchuneng", "row-yunzhu",
+            "row-yaochen", "row-yihui", "row-lingfeng",
         ],
     },
     "rank-rising": {

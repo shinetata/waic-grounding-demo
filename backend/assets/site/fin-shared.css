@@ -141,6 +141,15 @@ tbody td .name { font-weight: 700; font-size: 13.5px; color: #0d1117; font-famil
 .board-bse { background: #f1f0fb; color: #6b53d1; }
 .star-rating { color: #e0a020; letter-spacing: 1px; font-family: 'Inter', sans-serif; }
 
+/* ---- Denser table variant for column-heavy pages (IPO tables) ---- */
+.card.dense table { font-size: 11.5px; }
+.card.dense thead th { padding: 8px 8px; font-size: 10.8px; }
+.card.dense tbody td { padding: 6.5px 8px; }
+
+/* ---- "Still open today" row highlight ---- */
+tbody tr.row-today { background: #fffaf0; }
+tbody tr.row-today:hover { background: #fff2d6; }
+
 .foot-note {
   padding: 10px 20px;
   font-size: 10.5px;

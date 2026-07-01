@@ -25,31 +25,46 @@ NAV_GROUPS = [
     {"group": "技术选股", "pages": ["rank-rising", "rank-volume", "rank-vol-price"]},
 ]
 
+# Fixed "today" for this demo's mock universe — every page's "更新时间"/"申购日期"
+# text is authored against this date, and it is also injected into the model's
+# prompt (see stock_prompts.build_stock_messages) so eligibility questions like
+# "今天仍可申购的" have an unambiguous anchor instead of relying on the model to
+# OCR the small update-time text in the corner of the screenshot.
+TODAY_DATE = "2026-07-01"
+
 QUERIES = [
-    "最近能打新的科创板新股里，发行价最低的是哪只？记下它的申购代码、申购上限和上市日期。",
-    "最近的科创板新股里，发行市盈率最高的是哪只？记下它的简称、发行价和申购日期。",
+    "科创板新股里，今天（申购日当天）仍可申购的股票中，发行价格最低的是哪一只？记下它的简称、申购代码、发行价格和申购日期。",
+    "科创板新股中，发行市盈率相对所属行业市盈率溢价最大（即发行市盈率超出行业市盈率的差值最大）的是哪一只？记下它的简称、发行市盈率、行业市盈率和申购日期。",
     "今天连续放量上涨的股票里，涨幅最高的是哪只？记下名称、涨跌幅和换手率。",
 ]
 
 # Field labels the model should populate in its structured `answer` for each
 # query — keeps the final AnswerCard layout stable regardless of model output order.
 QUERY_FIELDS = [
-    ["简称", "申购代码", "申购上限(万股)", "上市日期"],
-    ["简称", "发行价格(元)", "申购日期"],
+    ["简称", "申购代码", "发行价格(元)", "申购日期"],
+    ["简称", "发行市盈率(倍)", "行业市盈率(倍)", "申购日期"],
     ["名称", "涨跌幅", "换手率"],
 ]
 
 # Ground-truth answers baked into the mock data — used only as a safety-net
 # fallback if the model fails to produce a usable structured answer, never
 # shown to the model itself.
+#
+# Q1 and Q2 are both deliberately designed so that a naive single-column sort
+# over the *whole* table picks the wrong row: 汇能储能 has the lowest price in
+# the entire table but its 申购日期 (2026-06-30) is already in the past, so it
+# is not actually eligible for Q1 ("今天仍可申购"); 云铸科技 has the highest raw
+# 发行市盈率 but only a modest premium over its own industry's PE, so it is not
+# the answer to Q2 ("溢价最大"). The correct rows only surface once the model
+# applies the eligibility filter (Q1) or computes the cross-column spread (Q2).
 QUERY_GROUND_TRUTH = [
     {
-        "简称": "汇能储能", "代码": "688742", "申购代码": "787742",
-        "申购上限(万股)": "1.40", "上市日期": "2026-07-16",
+        "简称": "曜辰半导", "代码": "688931", "申购代码": "787931",
+        "发行价格(元)": "9.80", "申购日期": TODAY_DATE,
     },
     {
-        "简称": "云铸科技", "代码": "688206",
-        "发行价格(元)": "45.20", "申购日期": "2026-06-22",
+        "简称": "熠辉芯电", "代码": "688955",
+        "发行市盈率(倍)": "60.20", "行业市盈率(倍)": "28.30", "申购日期": TODAY_DATE,
     },
     {
         "名称": "格创动能", "代码": "300856",
@@ -60,8 +75,8 @@ QUERY_GROUND_TRUTH = [
 # (stage_id, element_id) clue used as a fallback bbox anchor per query, and
 # as the stage the agent is expected to land on to answer that query.
 QUERY_CLUES = [
-    ("ipo-star", "row-huinengchuneng"),
-    ("ipo-star", "row-yunzhu"),
+    ("ipo-star", "row-yaochen"),
+    ("ipo-star", "row-yihui"),
     ("rank-vol-price", "row-gechuang"),
 ]
 
@@ -71,12 +86,20 @@ QUERY_CLUES = [
 # imprecise boxes. Since the exact header rects are already in the manifests,
 # snap the sort highlight to the real column header via keyword match instead
 # of trusting the model's own coordinates for this specific action.
+#
+# Order matters: _resolve_column_rect matches keywords in list order and
+# returns on the first hit, so more specific keywords (e.g. "行业市盈率") must
+# be listed before the generic substring they contain ("市盈率") — otherwise
+# "行业市盈率" would incorrectly snap to the plain 发行市盈率 column.
 COLUMN_HINTS: dict[str, list[tuple[str, str]]] = {
     "ipo-star": [
         ("发行价", "col-price"),
         ("价格", "col-price"),
+        ("行业市盈率", "col-industry-pe"),
+        ("行业", "col-industry-pe"),
         ("市盈率", "col-pe"),
         ("申购日期", "col-date"),
+        ("申购日", "col-date"),
     ],
     "rank-rising": [
         ("涨跌幅", "col-change"),
