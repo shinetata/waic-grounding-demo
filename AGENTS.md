@@ -4,17 +4,25 @@
 
 ## 这是什么项目
 
-一个独立的 Demo（从更大的 `WAIC/waic-demo` monorepo 中拆分出来），用一个 Vue 前端 + 一个
-FastAPI 后端，展示视觉语言 "computer use" agent 的三项能力，每项能力都是一个独立可播放的场景：
+这个仓库里有**两个互相独立、不共享代码/依赖/端口**的 Demo：
 
-| 场景 | 后端模块 | 前端组件 | 展示内容 |
-|---|---|---|---|
-| 一眼定位 (Grounding) | `backend/src/scenes/grounding.py` | `frontend/src/scenes/GroundingScene.vue` | 在一张高密度 Dashboard 截图上，针对递进难度的问题做精准 bbox 定位 |
-| 认知导航 (Navigation) | `backend/src/scenes/navigation.py` | `frontend/src/scenes/NavigationScene.vue` | 以安全审计员身份，在 6 页 SaaS 管理后台中自主选路（访问/跳过） |
-| 股票寻宝 (Stock Intelligence) | `backend/src/scenes/stock.py` | `frontend/src/scenes/StockScene.vue` | 跨页面信息整合：在 5 个模拟金融数据中心页面中 navigate/filter/sort/extract，回答复合投资问题 |
+1. **`backend/` + `frontend/`**（本节主要描述的对象）：从更大的 `WAIC/waic-demo` monorepo 中
+   拆分出来，用一个 Vue 前端 + 一个 FastAPI 后端，展示视觉语言 "computer use" agent 的三项能力，
+   每项能力都是一个独立可播放的场景：
 
-没有真实的后端数据源——每个"页面"都是手工编写的 HTML 模拟页面，渲染成静态 PNG。模型从不接触
-真实数据，它看到的永远只是截图。
+   | 场景 | 后端模块 | 前端组件 | 展示内容 |
+   |---|---|---|---|
+   | 一眼定位 (Grounding) | `backend/src/scenes/grounding.py` | `frontend/src/scenes/GroundingScene.vue` | 在一张高密度 Dashboard 截图上，针对递进难度的问题做精准 bbox 定位 |
+   | 认知导航 (Navigation) | `backend/src/scenes/navigation.py` | `frontend/src/scenes/NavigationScene.vue` | 以安全审计员身份，在 6 页 SaaS 管理后台中自主选路（访问/跳过） |
+   | 股票寻宝 (Stock Intelligence) | `backend/src/scenes/stock.py` | `frontend/src/scenes/StockScene.vue` | 跨页面信息整合：在 5 个模拟金融数据中心页面中 navigate/filter/sort/extract，回答复合投资问题 |
+
+   没有真实的后端数据源——每个"页面"都是手工编写的 HTML 模拟页面，渲染成静态 PNG。模型从不接触
+   真实数据，它看到的永远只是截图。
+
+2. **`web/`**：一个完全独立的新 Demo——"Mactive 股市探索"，用真实运行的浏览器会话（Playwright）
+   取代静态截图，模型的排序/筛选/导航都是对真实网页的真实点击。详见下面的
+   [`web/`：Mactive 股市探索](#web-mactive-股市探索真实浏览器交互-demo) 一节，完整说明在
+   [`web/README.md`](web/README.md)。
 
 ## 技术栈与目录结构
 
@@ -108,7 +116,64 @@ npx vue-tsc --noEmit -p tsconfig.json
 ——本项目此前明确要求过要清理掉真实品牌引用（例如不能出现"同花顺"/"10jqka"这类名称）。数据的
 *格式*要尽量真实，但不能对应任何真实存在的公司或证券。
 
+## `web/`：Mactive 股市探索（真实浏览器交互 Demo）
+
+完全独立的项目：自己的 `pyproject.toml`（uv）+ 自己的 `package.json`（pnpm/Vite），不 import
+`backend/`/`frontend/` 的任何代码，端口也不同（后端 `:8010`，前端 `:5183`）。改这部分代码时不用
+管上面几节讲的 `backend/`/`frontend/` 约定，反过来也一样。
+
+只有一个场景（"股市探索"），但底层不再是"预渲染 PNG + 静态 manifest 坐标"，而是一个真正在跑的
+浏览器会话：
+
+```
+web/backend/  FastAPI + uv + Playwright（async）
+  site/       真实可运行的 HTML+JS+CSS 页面（唯一素材来源，没有预渲染步骤，没有 manifest）：
+                ipo-subscribe.html（新股申购，真实板块 tab 筛选）
+                market-ranking.html（行情排行，真实"连涨天数/放量天数"组合筛选）
+                shared.js（真排序 + 真筛选的客户端逻辑：点表头真的重排 DOM 行，行 id 不变；
+                点 tab/条件 chip 真的隐藏/显示行）
+              由 FastAPI `StaticFiles` 挂载到 `/site`，Playwright 通过真实 HTTP URL 访问它
+  src/env/browser_env.py   BrowserEnv：每个 WS 连接一个独立的 browser context/page；
+                            navigate/sort_by/apply_filter 都是真实点击；element_rect() 永远
+                            实时查询当前 DOM 位置（`bounding_box()`），排序/筛选后坐标依然精确，
+                            不存在"位置随重排漂移"的问题
+  src/agent/    policy.py（call_vlm，跟 backend/ 的实现基本一致）、stock_prompts.py、
+                loop.py（run_stock：驱动真实点击 + 每步重新截图 + 实时 bbox 查询）
+  src/scenes/stock.py   页面/题目/ground-truth/QUERY_CLUES/COLUMN_HINTS/FILTER_HINTS 的唯一权威来源
+web/frontend/ Vue 3 + TypeScript + Vite，单场景 UI，复用 backend/frontend 里那套通用组件
+              （ScreenshotView/BoundingBox/ThoughtStream/EvidencePanel/PageMap/SceneProgress）
+              的设计模式，但每一步都消费 WS 事件里的实时截图 base64（不是固定图片路径）——
+              排序/筛选后画面真的变了，没有"静态资源"这回事
+```
+
+常用命令：
+
+```bash
+cd web && ./dev.sh   # 一键启动，或参考 web/README.md 手动启动步骤
+```
+
+几个跟 `backend/`/`frontend/` 不一样、容易踩坑的点：
+
+- **截图分辨率**：`browser_env.py` 的 `_observe()` 直接把 Playwright 的原始截图（未降采样）当作
+  `thumbnail_b64` 发给前端——密集财经表格对清晰度要求高，`object-fit: contain` 只需要缩小一张大图
+  （永远清晰），不能反过来放大一张 720px 的小图（在任何比 720px 宽的容器/HiDPI 屏幕上都会糊）。
+- **事件批处理坑**：`loop.py` 里 `scene_start` 和 `query_start` 是背靠背 yield 的，中间没有
+  `await` 让出控制权，可能落进同一次 WS onmessage/Vue 响应式 flush 里。`MarketExploreScene.vue`
+  的 `watch(events, ...)` 因此**不能**只看 `evts[evts.length - 1]`（会静默丢掉 `scene_start` 的
+  首屏截图），必须用 `processedCount` 游标把每一个新到达的事件都处理一遍。
+- **Playwright headless-shell 下载失败**：网络受限环境下 `playwright install chromium` 可能因为
+  新版默认要下载单独的 "headless shell" 二进制而失败；`server.py` 启动浏览器时带了
+  `channel="chromium"` 复用常规 Chromium 构建（如果 `~/Library/Caches/ms-playwright/` 下已经有
+  `chromium-*` 目录，不需要额外下载），绕开这个问题。
+- 品牌约束跟 `backend/` 完全一样：`site/` 里的 "FinData"、公司名、行情数据全部虚构，不得出现任何
+  真实平台/公司名称（详见上面"模拟内容的品牌约束"一节，同样适用于这里）。
+- `web/backend/**/__pycache__/` 在 `.gitignore` 里（跟 `backend/` 那个历史遗留的"`.pyc` 被跟踪"
+  不是一回事，`web/` 是干净的，不要把这个当成"应该保持一致"的理由去改动）。
+
 ## 已知的历史遗留问题
+
+以下几条都是 `backend/`/`frontend/` 的历史遗留，不适用于 `web/`（`web/` 是后来新建的独立项目，
+没有这些包袱）。
 
 - `__pycache__/` 下的 `.pyc` 文件被 git 跟踪了（不太寻常，属于历史遗留）——除非有人明确要求，否则
   不用花精力去清理；执行 `uv run python ...` 导致它们被重新编译只是无害的噪音。

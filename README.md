@@ -2,6 +2,10 @@
 
 展示认知基模的核心能力：**精准视觉定位 (Grounding)**、**智能信息空间导航 (Computer Use)** 与 **跨页面信息整合 (Information Synthesis)**。
 
+> 本仓库包含两个互相独立的 Demo：下面的 `backend/`+`frontend/`（静态截图三场景），以及
+> [`web/`](web/README.md)（Mactive 股市探索，真实浏览器交互，见文末单独一节）。两者不共享代码、
+> 依赖或端口，可以只启动其中一个。
+
 ## 场景
 
 ### 一眼定位 (Grounding)
@@ -51,3 +55,19 @@ pnpm dev
 - **后端**: Python, FastAPI, WebSocket, OpenAI-compatible VLM API
 - **前端**: Vue 3, TypeScript, Vite
 - **素材**: HTML → Playwright → PNG + manifest JSON
+
+---
+
+## 独立 Demo：Mactive 股市探索（真实浏览器交互）
+
+`web/` 目录下是一个完全独立的项目（不依赖、不共享上面这套 `backend/`/`frontend/` 的任何代码或端口），
+用一个真实运行的 Playwright 浏览器会话取代静态截图：模型对"新股申购"/"行情排行"两个真实可交互的
+模拟金融页面进行真实的点击排序、真实的条件筛选、真实的页面跳转，每一步都在当前的真实截图上画出
+精确的 grounding bbox。
+
+```bash
+cd web
+./dev.sh
+```
+
+打开 http://localhost:5183 即可看到。完整架构说明、手动启动步骤、排障见 [`web/README.md`](web/README.md)。
