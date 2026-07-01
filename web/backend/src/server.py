@@ -1,27 +1,26 @@
 """FastAPI app for the 股市探索 (market-explore) demo.
 
-Owns one shared Playwright `Browser` process for the app's lifetime; each
-WebSocket connection gets its own isolated `BrowserContext`/`Page` (see
-`env.browser_env.BrowserEnv`), created on connect and closed on
-disconnect/error so no Chromium processes/contexts leak across runs.
+No Playwright dependency: the frontend iframe is the AI's viewport.
+Each WebSocket connection gets a ``RemoteEnv`` that sends action commands
+to the frontend and receives screenshots / element rects in return.
 """
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import logging
 import os
 import traceback
-from contextlib import asynccontextmanager
 from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from playwright.async_api import async_playwright
 
 from .agent.loop import run_stock
-from .env.browser_env import BrowserEnv
+from .env.remote_env import RemoteEnv
 from .scenes.stock import (
     COLUMN_HINTS,
     FILTER_HINTS,
@@ -40,33 +39,8 @@ logger = logging.getLogger("demo")
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 SITE_DIR = BACKEND_DIR / "site"
 PORT = int(os.getenv("PORT", "8010"))
-HEADED = os.getenv("BROWSER_HEADED", "").strip() in ("1", "true", "True")
 
-_playwright_ctx = None
-_browser = None
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    global _playwright_ctx, _browser
-    _playwright_ctx = await async_playwright().start()
-    # Use the regular Chromium build (already installed for the sibling
-    # ../backend demo) rather than the separate "headless shell" binary that
-    # newer Playwright defaults to for headless=True — avoids requiring an
-    # extra browser download in network-restricted environments.
-    _browser = await _playwright_ctx.chromium.launch(headless=not HEADED, channel="chromium")
-    logger.info("Playwright chromium launched (headless=%s)", not HEADED)
-    try:
-        yield
-    finally:
-        if _browser is not None:
-            await _browser.close()
-        if _playwright_ctx is not None:
-            await _playwright_ctx.stop()
-        logger.info("Playwright chromium closed")
-
-
-app = FastAPI(lifespan=lifespan)
+app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
@@ -80,7 +54,7 @@ app.mount("/site", StaticFiles(directory=str(SITE_DIR)), name="site")
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "browser": _browser is not None}
+    return {"status": "ok"}
 
 
 @app.get("/api/scenes/stock")
@@ -92,14 +66,39 @@ async def stock_info():
 @app.websocket("/ws/run")
 async def ws_run(ws: WebSocket):
     await ws.accept()
-    env: BrowserEnv | None = None
+    env: RemoteEnv | None = None
+    recv_task: asyncio.Task | None = None
     try:
         pages, queries = load_stock_scene()
         page_ids = [p["id"] for p in pages]
-        base_url = f"http://127.0.0.1:{PORT}/site"
 
-        env = BrowserEnv(base_url=base_url, page_ids=page_ids, entry_page=page_ids[0])
-        await env.attach(_browser)
+        response_queue: asyncio.Queue = asyncio.Queue()
+        env = RemoteEnv(
+            ws=ws,
+            response_queue=response_queue,
+            page_ids=page_ids,
+            entry_page=page_ids[0],
+        )
+
+        async def receiver():
+            """Read messages from the frontend and route them to the queue.
+
+            When the WS is closed (client refresh / cancel), push a sentinel
+            ``None`` so any coroutine awaiting ``queue.get()`` wakes up and
+            can raise a disconnect instead of hanging forever.
+            """
+            try:
+                while True:
+                    msg = await ws.receive_json()
+                    await response_queue.put(msg)
+            except WebSocketDisconnect:
+                pass
+            except Exception:
+                logger.info("Receiver task exited: %s", traceback.format_exc(limit=1))
+            finally:
+                await response_queue.put(None)
+
+        recv_task = asyncio.create_task(receiver())
 
         gen = run_stock(
             env,
@@ -125,5 +124,9 @@ async def ws_run(ws: WebSocket):
         except Exception:
             pass
     finally:
+        if recv_task is not None:
+            recv_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError, Exception):
+                await recv_task
         if env is not None:
             await env.close()

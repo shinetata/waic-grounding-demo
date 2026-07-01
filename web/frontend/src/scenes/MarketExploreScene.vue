@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
-import ScreenshotView from '../components/ScreenshotView.vue'
+import LivePageView from '../components/LivePageView.vue'
 import ThoughtStream from '../components/ThoughtStream.vue'
 import QueryCard from '../components/QueryCard.vue'
 import SceneProgress from '../components/SceneProgress.vue'
@@ -8,7 +8,7 @@ import EvidencePanel from '../components/EvidencePanel.vue'
 import PageMap from '../components/PageMap.vue'
 import AppHeader from '../components/AppHeader.vue'
 import AnswerCard from '../components/AnswerCard.vue'
-import type { Grounding } from '../components/ScreenshotView.vue'
+import type { Grounding } from '../components/LivePageView.vue'
 import type { ThoughtEntry } from '../components/ThoughtStream.vue'
 import type { EvidenceEntry } from '../components/EvidencePanel.vue'
 import type { PageInfo } from '../components/PageMap.vue'
@@ -16,7 +16,7 @@ import { useWebSocket, type DemoEvent } from '../composables/useWebSocket'
 
 const emit = defineEmits<{ done: [] }>()
 
-const { events, running, connect, disconnect } = useWebSocket()
+const { events, running, connect, disconnect, send, onCommand } = useWebSocket()
 
 const PAGES: Record<string, { title: string }> = {
   'ipo-subscribe': { title: '新股申购' },
@@ -37,14 +37,7 @@ interface AnswerEntry {
   sourceStageTitle: string
 }
 
-function dataUrl(b64: string): string {
-  return `data:image/png;base64,${b64}`
-}
-
 const currentStage = ref('ipo-subscribe')
-const currentImage = ref('')
-const pageThumbs = ref<Record<string, string>>({})
-const currentRect = ref({ x: 0, y: 0, w: 1, h: 1 })
 const currentQueryIndex = ref(0)
 const answers = ref<AnswerEntry[]>([])
 let doneTimer: ReturnType<typeof setTimeout> | null = null
@@ -54,12 +47,12 @@ const navPath = ref<Array<{ from: string; to: string }>>([])
 let visitOrder = 1
 const visitOrders = ref<Record<string, number>>({ 'ipo-subscribe': 1 })
 const answersStackRef = ref<HTMLElement | null>(null)
+const livePageRef = ref<InstanceType<typeof LivePageView> | null>(null)
 
 const pages = computed<PageInfo[]>(() => {
   return Object.entries(PAGES).map(([id, meta]) => ({
     id,
     title: meta.title,
-    imageSrc: pageThumbs.value[id],
     status: id === currentStage.value ? 'current' : visited.value.has(id) ? 'visited' : 'idle',
     order: visitOrders.value[id],
   }))
@@ -117,72 +110,109 @@ const progressSteps = computed(() => {
   })) as Array<{ label: string; status: 'idle' | 'active' | 'done' }>
 })
 
-// `scene_start` and `query_start` are sent back-to-back with no await in
-// between (see loop.py), so they can land in the same WS onmessage/reactive
-// flush batch — watching only the *last* event would silently drop
-// `scene_start`'s initial screenshot. Process every new event in order
-// instead, tracking how many have already been handled.
+// ---- Handle backend command messages ----
+
+async function handleCommand(msg: DemoEvent) {
+  const page = livePageRef.value
+  if (!page) {
+    console.warn('LivePageView not mounted, ignoring command:', msg.type)
+    return
+  }
+
+  await page.waitForReady()
+
+  if (msg.type === 'observe') {
+    const b64 = await page.captureScreenshot()
+    const docSize = page.getDocSize()
+    send({
+      type: 'screenshot',
+      image_b64: b64,
+      stage: currentStage.value,
+      doc_width: docSize.w,
+      doc_height: docSize.h,
+    })
+  } else if (msg.type === 'execute') {
+    let elementRect: { x: number; y: number; w: number; h: number } | null = null
+
+    if (msg.action === 'navigate') {
+      const from = currentStage.value
+      await page.executeNavigate(msg.page_id)
+      currentStage.value = msg.page_id
+      visited.value.add(msg.page_id)
+      if (!visitOrders.value[msg.page_id]) {
+        visitOrder++
+        visitOrders.value[msg.page_id] = visitOrder
+      }
+      if (from !== msg.page_id) navPath.value.push({ from, to: msg.page_id })
+    } else if (msg.action === 'sort') {
+      await page.executeSort(msg.element_id, msg.direction)
+      elementRect = page.getElementRect(msg.element_id)
+    } else if (msg.action === 'filter') {
+      await page.executeFilter(msg.element_id)
+      elementRect = page.getElementRect(msg.element_id)
+    }
+
+    const b64 = await page.captureScreenshot()
+    const docSize = page.getDocSize()
+    send({
+      type: 'screenshot',
+      image_b64: b64,
+      stage: currentStage.value,
+      doc_width: docSize.w,
+      doc_height: docSize.h,
+      element_rect: elementRect,
+    })
+  } else if (msg.type === 'query_rect') {
+    const rect = page?.getElementRect(msg.element_id) ?? null
+    send({
+      type: 'rect',
+      element_id: msg.element_id,
+      rect: rect,
+    })
+  }
+}
+
+// ---- Process display events ----
+
 let processedCount = 0
 
 watch(events, (evts) => {
   for (; processedCount < evts.length; processedCount++) {
-  const latest = evts[processedCount]
-  if (!latest) continue
+    const latest = evts[processedCount]
+    if (!latest) continue
 
-  if (latest.type === 'scene_start') {
-    if (latest.current_stage) currentStage.value = latest.current_stage
-    if (latest.thumbnail_b64) {
-      currentImage.value = dataUrl(latest.thumbnail_b64)
-      pageThumbs.value[currentStage.value] = currentImage.value
+    if (latest.type === 'query_start') {
+      currentQueryIndex.value = latest.query_index ?? 0
     }
-  }
 
-  if (latest.type === 'query_start') {
-    currentQueryIndex.value = latest.query_index ?? 0
-  }
-
-  if (latest.type === 'step') {
-    if (latest.stage) currentStage.value = latest.stage
-    if (latest.new_stage) {
-      const from = currentStage.value
-      currentStage.value = latest.new_stage
-      visited.value.add(latest.new_stage)
-      if (!visitOrders.value[latest.new_stage]) {
-        visitOrder++
-        visitOrders.value[latest.new_stage] = visitOrder
-      }
-      if (from !== latest.new_stage) navPath.value.push({ from, to: latest.new_stage })
-    }
-    if (latest.observation) {
-      if (latest.observation.rect) currentRect.value = latest.observation.rect
-      if (latest.observation.thumbnail_b64) {
-        currentImage.value = dataUrl(latest.observation.thumbnail_b64)
-        pageThumbs.value[currentStage.value] = currentImage.value
+    if (latest.type === 'step') {
+      if (latest.stage) currentStage.value = latest.stage
+      if (latest.new_stage) {
+        currentStage.value = latest.new_stage
       }
     }
-  }
 
-  if (latest.type === 'query_end') {
-    answers.value.push({
-      queryIndex: latest.query_index,
-      query: latest.query,
-      answer: latest.answer || {},
-      fields: latest.fields || [],
-      sourceStageTitle: PAGES[currentStage.value]?.title || currentStage.value,
-    })
-    nextTick(() => {
-      const el = answersStackRef.value
-      if (el) el.scrollTop = el.scrollHeight
-    })
-  }
+    if (latest.type === 'query_end') {
+      answers.value.push({
+        queryIndex: latest.query_index,
+        query: latest.query,
+        answer: latest.answer || {},
+        fields: latest.fields || [],
+        sourceStageTitle: PAGES[currentStage.value]?.title || currentStage.value,
+      })
+      nextTick(() => {
+        const el = answersStackRef.value
+        if (el) el.scrollTop = el.scrollHeight
+      })
+    }
 
-  if (latest.type === 'scene_end') {
-    doneTimer = setTimeout(() => emit('done'), 9000)
-  }
+    if (latest.type === 'scene_end') {
+      doneTimer = setTimeout(() => emit('done'), 9000)
+    }
 
-  if (latest.type === 'error') {
-    console.error('Demo error:', latest.message)
-  }
+    if (latest.type === 'error') {
+      console.error('Demo error:', latest.message)
+    }
   }
 })
 
@@ -194,11 +224,9 @@ function start() {
   visitOrder = 1
   visitOrders.value = { 'ipo-subscribe': 1 }
   currentStage.value = 'ipo-subscribe'
-  currentImage.value = ''
-  pageThumbs.value = {}
-  currentRect.value = { x: 0, y: 0, w: 1, h: 1 }
   currentQueryIndex.value = 0
   answers.value = []
+  onCommand(handleCommand)
   connect()
 }
 
@@ -222,14 +250,12 @@ defineExpose({ start, stop })
         <SceneProgress :steps="progressSteps" />
       </div>
       <div class="market-main">
-        <ScreenshotView
-          v-if="currentImage"
-          :image-src="currentImage"
+        <LivePageView
+          ref="livePageRef"
+          :page-id="currentStage"
           :groundings="groundings"
-          :current-rect="currentRect"
-          :show-viewport="currentRect.w < 0.95"
+          :locked="running"
         />
-        <div v-else class="market-loading">正在加载…</div>
         <div class="page-label">
           <span class="page-label-icon">🌐</span>
           <span class="page-label-live">LIVE</span>
@@ -290,17 +316,6 @@ defineExpose({ start, stop })
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-.market-loading {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #0d0f14;
-  border-radius: 10px;
-  border: 1px solid #1e222a;
-  color: #484f58;
-  font-size: 13px;
 }
 .page-label {
   flex-shrink: 0;

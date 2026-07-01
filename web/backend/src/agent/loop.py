@@ -1,18 +1,32 @@
-"""Agent loop for the 股市探索 (market-explore) scene — drives a real,
-live browser session (see `..env.browser_env.BrowserEnv`) rather than
-replaying static screenshots."""
+"""Agent loop for the 股市探索 (market-explore) scene.
+
+The ``env`` parameter is duck-typed — it works with both ``BrowserEnv``
+(Playwright) and ``RemoteEnv`` (frontend iframe over WebSocket).
+"""
 
 from __future__ import annotations
 
 import logging
 import re
 import time
-from typing import Any, AsyncIterator
+from typing import Any, AsyncIterator, Protocol, Optional
 
-from ..env.base import Rect
-from ..env.browser_env import BrowserEnv
+from ..env.base import Observation, Rect
 from .policy import call_vlm
 from .stock_prompts import STOCK_SYSTEM, build_stock_messages
+
+
+class Env(Protocol):
+    current_stage: str
+
+    async def reset(self) -> Observation: ...
+    async def observe(self) -> Observation: ...
+    async def navigate(self, page_id: str) -> bool: ...
+    async def sort_by(self, header_id: str, direction: Optional[str]) -> Optional[Rect]: ...
+    async def apply_filter(self, filter_id: str) -> Optional[Rect]: ...
+    async def element_rect(self, element_id: str) -> Optional[Rect]: ...
+    def set_rect(self, rect: Rect) -> None: ...
+    def zoom_out(self) -> None: ...
 
 logger = logging.getLogger("demo")
 
@@ -124,7 +138,7 @@ def _resolve_hint_id(
 
 
 async def _validate_and_snap_answer(
-    env: BrowserEnv,
+    env: Env,
     stage_id: str,
     bbox: list | None,
     step_answer: dict,
@@ -175,7 +189,7 @@ def _obs_payload(obs) -> dict:
 
 
 async def run_stock(
-    env: BrowserEnv,
+    env: Env,
     queries: list[str],
     pages: list[dict],
     required_fields: list[list[str]] | None = None,

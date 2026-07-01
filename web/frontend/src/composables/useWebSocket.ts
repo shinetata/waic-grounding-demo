@@ -2,6 +2,8 @@ import { ref, shallowRef } from 'vue'
 
 export type DemoEvent = Record<string, any>
 
+const COMMAND_TYPES = new Set(['observe', 'execute', 'query_rect'])
+
 export function useWebSocket() {
   const connected = ref(false)
   const events = shallowRef<DemoEvent[]>([])
@@ -10,6 +12,17 @@ export function useWebSocket() {
   const error = ref<string | null>(null)
 
   let ws: WebSocket | null = null
+  let commandHandler: ((msg: DemoEvent) => void) | null = null
+
+  function onCommand(handler: (msg: DemoEvent) => void) {
+    commandHandler = handler
+  }
+
+  function send(data: object) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(data))
+    }
+  }
 
   function connect() {
     disconnect()
@@ -27,6 +40,12 @@ export function useWebSocket() {
     ws.onmessage = (e) => {
       try {
         const evt: DemoEvent = JSON.parse(e.data)
+
+        if (COMMAND_TYPES.has(evt.type)) {
+          commandHandler?.(evt)
+          return
+        }
+
         events.value = [...events.value, evt]
         latestEvent.value = evt
 
@@ -54,7 +73,8 @@ export function useWebSocket() {
     }
     connected.value = false
     running.value = false
+    commandHandler = null
   }
 
-  return { connected, events, latestEvent, running, error, connect, disconnect }
+  return { connected, events, latestEvent, running, error, connect, disconnect, send, onCommand }
 }

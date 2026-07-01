@@ -186,10 +186,6 @@ tbody td .name { font-weight: 700; font-size: 13.5px; color: #0d1117; font-famil
 .card.dense thead th { padding: 8px 8px; font-size: 10.8px; }
 .card.dense tbody td { padding: 6.5px 8px; }
 
-/* ---- "Still open today" row highlight ---- */
-tbody tr.row-today { background: #fffaf0; }
-tbody tr.row-today:hover { background: #fff2d6; }
-
 /* ---- Hidden by client-side filter ---- */
 tbody tr.row-hidden { display: none; }
 
